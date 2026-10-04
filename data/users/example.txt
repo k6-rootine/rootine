@@ -1,0 +1,11 @@
+FirstName
+LastName
+Nickname
+My profile description
+4 10 2026 //Join date: day, month, year
+12 3 300 //Sessions completed, cycles completed, total focus time
+2 //Number of species in the forest
+oak //First species
+4 //number of trees grown
+pine //Second species
+2 //number of trees grown

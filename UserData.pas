@@ -4,7 +4,7 @@ unit UserData;
 interface 
 
     const 
-        MAX_SPECIES = 100   
+        MAX_SPECIES = 100;
 
 
    {saves the date of creation of the account}      
