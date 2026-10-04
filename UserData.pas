@@ -9,21 +9,21 @@ interface
 
    {saves the date of creation of the account}      
     type TDate = Record
-        day, month, year : Word;
+        day, month, year : LongInt;
     end;
     
     {the forest data with its nb species, nb of trees grown and name of the trees}
     type TForest = Record
             speciesName : Array[1..MAX_SPECIES] of string;
-            nbTreesGrown : Array[1..MAX_SPECIES] of Word;
-            nbSpecies : Word;
+            nbTreesGrown : Array[1..MAX_SPECIES] of LongInt;
+            nbSpecies : LongInt;
         end;
     
    {keeps the info of the user as well as its forest and stats}
     type TUser = Record
         firstName, lastName, username, description : string;
         joinDate : TDate;
-        nbSessionsDone, nbCyclesDone, totalFocusTime : Word;
+        nbSessionsDone, nbCyclesDone, totalFocusTime : LongInt;
         forest : TForest;
         end;
 
@@ -57,46 +57,46 @@ interface
     function getJoinDate(user: TUser): TDate;
 
 
-    function setNbSessionsDone(user: TUser; nb: Word): TUser;
+    function setNbSessionsDone(user: TUser; n: LongInt): TUser;
 
 
-    function getNbSessionsDone(user: TUser): Word;
+    function getNbSessionsDone(user: TUser): LongInt;
 
 
-    function setNbCyclesDone(user: TUser; nb: Word): TUser;
+    function setNbCyclesDone(user: TUser; n: LongInt): TUser;
 
 
-    function getNbCyclesDone(user: TUser): Word;
+    function getNbCyclesDone(user: TUser): LongInt;
 
 
-    function setTotalFocusTime(user: TUser; nb: Word): TUser;
+    function setTotalFocusTime(user: TUser; nb: LongInt): TUser;
 
 
-    function getTotalFocusTime(user: TUser): Word;
+    function getTotalFocusTime(user: TUser): LongInt;
 
 
     function getForest(user: TUser): TForest;
 
 
-    function getSpeciesName(forest: TForest; n: Word): string;
+    function getSpeciesName(forest: TForest; n: LongInt): string;
 
 
-    function getNbTreesGrown(forest: TForest; nb: Word): Word;
+    function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
 
 
-    function getNbSpecies(forest: TForest): Word;
+    function getNbSpecies(forest: TForest): LongInt;
 
 
-    function findSpecies(forest: TForest; tree: string): Word;
+    function findSpecies(forest: TForest; tree: string): LongInt;
 
 
-    function addTree(forest: TForest; n: Word): TForest;
+    function addTree(forest: TForest; speciesName: String): TForest;
 
 implementation
 
     function initialiseUser() : TUser;
     var
-        i : Word;
+        i : LongInt;
     begin
         initialiseUser.firstName := '';
         initialiseUser.lastName := '';
@@ -170,35 +170,35 @@ implementation
         getJoinDate := user.joinDate;
     end;
 
-    function setNbSessionsDone(user: TUser; nb: Word): TUser;
+    function setNbSessionsDone(user: TUser; n: LongInt): TUser;
     begin
-        user.nbSessionsDone := nb;
+        user.nbSessionsDone := n;
         setNbSessionsDone := user;
     end;
 
-    function getNbSessionsDone(user: TUser): Word;
+    function getNbSessionsDone(user: TUser): LongInt;
     begin
         getNbSessionsDone := user.nbSessionsDone;
     end;
 
-    function setNbCyclesDone(user: TUser; nb: Word): TUser;
+    function setNbCyclesDone(user: TUser; n: LongInt): TUser;
     begin
-        user.nbCyclesDone := nb;
+        user.nbCyclesDone := n;
         setNbCyclesDone := user;
     end;
 
-    function getNbCyclesDone(user: TUser): Word;
+    function getNbCyclesDone(user: TUser): LongInt;
     begin
         getNbCyclesDone := user.nbCyclesDone;
     end;
 
-    function setTotalFocusTime(user: TUser; nb: Word): TUser;
+    function setTotalFocusTime(user: TUser; nb: LongInt): TUser;
     begin
         user.totalFocusTime := nb;
         setTotalFocusTime := user;
     end;
 
-    function getTotalFocusTime(user: TUser): Word;
+    function getTotalFocusTime(user: TUser): LongInt;
     begin
         getTotalFocusTime := user.totalFocusTime;
     end;
@@ -208,8 +208,7 @@ implementation
         getForest := user.forest;
     end;
 
-    {shouldnt we add the user as a parameter too? do we know which "forest" we talking about here?}
-    function getSpeciesName(forest: TForest; n: Word): string;
+    function getSpeciesName(forest: TForest; n: LongInt): string;
     begin
         if (n >= 1) and (n <= forest.nbSpecies) then
             getSpeciesName := forest.speciesName[n]
@@ -217,8 +216,7 @@ implementation
             getSpeciesName := ' ';
     end;
 
-    {again, shouldnt we add the user as a parameter too? do we know which "forest" we talking about here?}
-    function getNbTreesGrown(forest: TForest; nb: Word): Word;
+    function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
     begin
         if (n >= 1) and (n <= forest.nbSpecies) then
             getNbTreesGrown := forest.nbTreesGrown[n]
@@ -226,15 +224,15 @@ implementation
             getNbTreesGrown := 0;
     end;
 
-    function getNbSpecies(forest: TForest): Word;
+    function getNbSpecies(forest: TForest): LongInt;
     begin
         getNbSpecies := forest.nbSpecies;
     end;
 
     {we look from i = 1 to nbSpecies if tree exists. If its found, we return its position. If it doesnt exist, we return 0}
-    function findSpecies(forest: TForest; tree: string): Word;
+    function findSpecies(forest: TForest; tree: string): LongInt;
     var 
-        i : Word;
+        i : LongInt;
         found : Boolean;
     begin
         i := 1;
@@ -254,10 +252,12 @@ implementation
     end;
 
     {adds +1 tree to the given species number of grown trees}
-    function addTree(forest: TForest; n: Word): TForest;
+    function addTree(forest: TForest; speciesName: String): TForest;
     begin
-        if (n >= 1) and (n <= forest.nbSpecies) then
-            forest.speciesName[n] := forest.speciesName[n] + 1;
-        addTree := forest;
+        if (forest.nbSpecies < MAX_SPECIES) then 
+        begin 
+            forest.nbSpecies := forest.nbSpecies + 1;
+            forest.speciesName[forest.nbSpecies] := speciesName;
+        end;
     end;
 end.
