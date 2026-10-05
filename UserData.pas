@@ -3,7 +3,7 @@ unit UserData;
 
 interface 
 
-    const 
+    
         MAX_SPECIES = 100;
 
 
@@ -21,199 +21,96 @@ interface
     
    {keeps the info of the user as well as its forest and stats}
     type TUser = Record
-        firstName, lastName, username, description : string;
+        name, username, description : string;
         joinDate : TDate;
         nbSessionsDone, nbCyclesDone, totalFocusTime : LongInt;
         forest : TForest;
         end;
 
-    function initialiseUser() : TUser;
+
+    {--- Date ---}
+    procedure initialiseDate(var date: TDate; day, month, year: LongInt);
+    function getDay(date: TDate): LongInt;
+    function getMonth(date: TDate): LongInt;
+    function getYear(date: TDate): LongInt;
+
+    {---Forest --}
+    procedure initialiseForest(var forest: TForest);
+    function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
+    function getNbSpecies(forest: TForest): LongInt;
+    function findSpecies(forest: TForest; tree: string): LongInt;
+    function getForestSpeciesName(forest: TForest; n: LongInt): string;
+
+    {--User--}
+    procedure initialiseUser(var user: TUser);
 
 
-    function setFirstName(user: TUser; firstName: string): TUser;
+    function getName(user: TUser): string;
+    procedure setName(var user: TUser; name: string);
 
-
-    function getFirstName(user: TUser): string;
-
-
-    function setLastName(user: TUser; lastName: string): TUser;
-
-
-    function getLastName(user: TUser): string;
-
-
-    function setUsername(user: TUser; username: string): TUser;
-
-
+    procedure setUsername(var user: TUser; username: string);
     function getusername(user: TUser): string;
 
 
-    function setDescription(user: TUser; description: string): TUser;
-
-
+    procedure setDescription(var user: TUser; description: string);
     function getDescription(user: TUser): string;
 
 
-    function getJoinDate(user: TUser): TDate;
-
-
-    function setNbSessionsDone(user: TUser; n: LongInt): TUser;
-
-
+    procedure setNbSessionsDone(var user: TUser; nb: LongInt);
     function getNbSessionsDone(user: TUser): LongInt;
 
 
-    function setNbCyclesDone(user: TUser; n: LongInt): TUser;
-
-
+    procedure setNbCyclesDone(var user: TUser; nb: LongInt);
     function getNbCyclesDone(user: TUser): LongInt;
 
 
-    function setTotalFocusTime(user: TUser; nb: LongInt): TUser;
-
-
+    procedure setTotalFocusTime(var user: TUser; nb: LongInt);
     function getTotalFocusTime(user: TUser): LongInt;
 
 
     function getForest(user: TUser): TForest;
+    function getJoinDate(user: TUser): TDate;
 
-
-    function getSpeciesName(forest: TForest; n: LongInt): string;
-
-
-    function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
-
-
-    function getNbSpecies(forest: TForest): LongInt;
-
-
-    function findSpecies(forest: TForest; tree: string): LongInt;
-
-
-    function addTree(forest: TForest; speciesName: String): TForest;
+    {adds +1 grown tree to the species "tree" of the user's forest (the species is created if it is new)}
+    procedure addTree(var user: TUser; tree: string);
 
 implementation
 
-    function initialiseUser() : TUser;
+    {--DATE--}
+    procedure initialiseDate(var date: TDate; day, month, year: LongInt);
+    begin
+        date.day := day;
+        date.month := month;
+        date.year := year;
+    end;
+ 
+    function getDay(date: TDate): LongInt;
+    begin
+        getDay := date.day;
+    end;
+ 
+    function getMonth(date: TDate): LongInt;
+    begin
+        getMonth := date.month;
+    end;
+ 
+    function getYear(date: TDate): LongInt;
+    begin
+        getYear := date.year;
+    end;
+
+
+    {--FOREST-- }
+    procedure initialiseForest(var forest: TForest);
     var
         i : LongInt;
     begin
-        initialiseUser.firstName := '';
-        initialiseUser.lastName := '';
-        initialiseUser.username := '';
-        initialiseUser.description := '';
-        
-        initialiseUser.joinDate.day := 0;
-        initialiseUser.joinDate.month := 0;
-        initialiseUser.joinDate.year := 0;
-        
-        initialiseUser.nbSessionsDone := 0;
-        initialiseUser.nbCyclesDone := 0;
-        initialiseUser.totalFocusTime := 0;
-        
-        initialiseUser.forest.nbSpecies := 0;
+        forest.nbSpecies := 0;
         for i := 1 to MAX_SPECIES do
         begin
-            initialiseUser.forest.speciesName[i] := '';
-            initialiseUser.forest.nbTreesGrown[i] := 0;
+            forest.speciesName[i] := '';
+            forest.nbTreesGrown[i] := 0;
         end;
-    end;
-
-
-    function setFirstName(user: TUser; firstName: string): TUser;
-    begin
-        user.firstName := firstName;
-        setFirstName := user;
-    end;
-
-    function getFirstName(user: TUser): string;
-    begin
-        getFirstName := user.firstName;
-    end;
-
-    function setLastName(user: TUser; lastName: string): TUser;
-    begin
-        user.lastName := lastName;
-        setLastName := user;
-    end;
-
-    function getLastName(user: TUser): string;
-    begin
-        getLastName := user.lastName;
-    end;
-
-    function setUsername(user: TUser; username: string): TUser;
-    begin
-        user.username := username;
-        setUsername := user;
-    end;
-
-
-    function getusername(user: TUser): string;
-    begin
-        getusername := user.username;
-    end;
-
-    function setDescription(user: TUser; description: string): TUser;
-    begin
-        user.description := description;
-        setDescription := user;
-    end;
-
-    function getDescription(user: TUser): string;
-    begin
-        getDescription := user.description;
-    end;
-
-    function getJoinDate(user: TUser): TDate;
-    begin
-        getJoinDate := user.joinDate;
-    end;
-
-    function setNbSessionsDone(user: TUser; n: LongInt): TUser;
-    begin
-        user.nbSessionsDone := n;
-        setNbSessionsDone := user;
-    end;
-
-    function getNbSessionsDone(user: TUser): LongInt;
-    begin
-        getNbSessionsDone := user.nbSessionsDone;
-    end;
-
-    function setNbCyclesDone(user: TUser; n: LongInt): TUser;
-    begin
-        user.nbCyclesDone := n;
-        setNbCyclesDone := user;
-    end;
-
-    function getNbCyclesDone(user: TUser): LongInt;
-    begin
-        getNbCyclesDone := user.nbCyclesDone;
-    end;
-
-    function setTotalFocusTime(user: TUser; nb: LongInt): TUser;
-    begin
-        user.totalFocusTime := nb;
-        setTotalFocusTime := user;
-    end;
-
-    function getTotalFocusTime(user: TUser): LongInt;
-    begin
-        getTotalFocusTime := user.totalFocusTime;
-    end;
-
-    function getForest(user: TUser): TForest;
-    begin
-        getForest := user.forest;
-    end;
-
-    function getSpeciesName(forest: TForest; n: LongInt): string;
-    begin
-        if (n >= 1) and (n <= forest.nbSpecies) then
-            getSpeciesName := forest.speciesName[n]
-        else
-            getSpeciesName := ' ';
     end;
 
     function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
@@ -229,7 +126,7 @@ implementation
         getNbSpecies := forest.nbSpecies;
     end;
 
-    {we look from i = 1 to nbSpecies if tree exists. If its found, we return its position. If it doesnt exist, we return 0}
+     {we look from i = 1 to nbSpecies if tree exists. If its found, we return its position. If it doesnt exist, we return 0}
     function findSpecies(forest: TForest; tree: string): LongInt;
     var 
         i : LongInt;
@@ -250,14 +147,122 @@ implementation
         else
             findSpecies := 0;
     end;
-
-    {adds +1 tree to the given species number of grown trees}
-    function addTree(forest: TForest; speciesName: String): TForest;
+    
+    function getForestSpeciesName(forest: TForest; n: LongInt): string;
     begin
-        if (forest.nbSpecies < MAX_SPECIES) then 
-        begin 
-            forest.nbSpecies := forest.nbSpecies + 1;
-            forest.speciesName[forest.nbSpecies] := speciesName;
-        end;
+        if (n >= 1) and (n <= forest.nbSpecies) then
+            getSpeciesName := forest.speciesName[n]
+        else
+            getSpeciesName := ' ';
     end;
+
+    {--USER--}
+    procedure initialiseUser(var user: TUser);
+    begin
+        user.name := '';
+        user.username := '';
+        user.description := '';
+ 
+        initialiseDate(user.joinDate, 0, 0, 0);
+ 
+        user.nbSessionsDone := 0;
+        user.nbCyclesDone := 0;
+        user.totalFocusTime := 0;
+ 
+        initialiseForest(user.forest);
+    end;
+
+    function getName(user: TUser): string;
+    begin
+        getName := user.name;
+    end;
+ 
+    procedure setName(var user: TUser; name: string);
+    begin
+        user.name := name;
+    end;
+ 
+    function getUsername(user: TUser): string;
+    begin
+        getUsername := user.username;
+    end;
+ 
+    procedure setUsername(var user: TUser; username: string);
+    begin
+        user.username := username;
+    end;
+ 
+    function getDescription(user: TUser): string;
+    begin
+        getDescription := user.description;
+    end;
+ 
+    procedure setDescription(var user: TUser; description: string);
+    begin
+        user.description := description;
+    end;
+ 
+    function getNbSessionsDone(user: TUser): LongInt;
+    begin
+        getNbSessionsDone := user.nbSessionsDone;
+    end;
+ 
+    procedure setNbSessionsDone(var user: TUser; nb: LongInt);
+    begin
+        user.nbSessionsDone := nb;
+    end;
+ 
+    function getNbCyclesDone(user: TUser): LongInt;
+    begin
+        getNbCyclesDone := user.nbCyclesDone;
+    end;
+ 
+    procedure setNbCyclesDone(var user: TUser; nb: LongInt);
+    begin
+        user.nbCyclesDone := nb;
+    end;
+ 
+    function getTotalFocusTime(user: TUser): LongInt;
+    begin
+        getTotalFocusTime := user.totalFocusTime;
+    end;
+ 
+    procedure setTotalFocusTime(var user: TUser; nb: LongInt);
+    begin
+        user.totalFocusTime := nb;
+    end;
+ 
+    function getJoinDate(user: TUser): TDate;
+    begin
+        getJoinDate := user.joinDate;
+    end;
+ 
+    function getForest(user: TUser): TForest;
+    begin
+        getForest := user.forest;
+    end;
+ 
+    procedure addTree(var user: TUser; tree: string);
+    var
+        n : LongInt;
+    begin
+        n := findSpecies(user.forest, tree);
+ 
+        {if new species, we create it at the end of the list (we check if there is still room)}
+        if n = 0 then
+        begin
+            if user.forest.nbSpecies < MAX_SPECIES then
+            begin
+                user.forest.nbSpecies := user.forest.nbSpecies + 1;
+                n := user.forest.nbSpecies;
+                user.forest.speciesName[n] := tree;
+                user.forest.nbTreesGrown[n] := 0;
+            end;
+        end;
+ 
+        
+        if (n <> 0) then
+            user.forest.nbTreesGrown[n] := user.forest.nbTreesGrown[n] + 1;
+    end;
+    
 end.
