@@ -1,11 +1,8 @@
 {This unit stocks and manuplates user information such as join date, identifiants and statistics}
 unit UserData;
 
-interface 
-
-    
-        MAX_SPECIES = 100;
-
+interface
+    const MAX_SPECIES = 100;
 
    {saves the date of creation of the account}      
     type TDate = Record
@@ -151,9 +148,9 @@ implementation
     function getForestSpeciesName(forest: TForest; n: LongInt): string;
     begin
         if (n >= 1) and (n <= forest.nbSpecies) then
-            getSpeciesName := forest.speciesName[n]
+            getForestSpeciesName := forest.speciesName[n]
         else
-            getSpeciesName := ' ';
+            getForestSpeciesName := ' ';
     end;
 
     {--USER--}
