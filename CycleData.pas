@@ -16,8 +16,12 @@ interface
             state: TState;
         end;
 
-    function initialiseCycle(mode: TMode, focusDuration, shortBreakDuration, longBreakDuration,
+    function initialiseCycle(mode: TMode; focusDuration, shortBreakDuration, longBreakDuration,
             nbSessionsBeforeLongBreak: LongInt): TCycle;
 implementation 
+function initialiseCycle(mode: TMode; focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt): TCycle;
+begin 
+
+end;
 
 end.
