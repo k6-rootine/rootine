@@ -2,16 +2,16 @@
   Les dossiers data sont relatifs au dossier depuis lequel le programme est lance. }
 unit FileManager;
 
-{$mode objfpc}
-
 interface
 
 uses UserData, TreeData, SysUtils;
 
 const
     MAX_SPECIES = 100;
-    DOSSIER_USR = 'data/users/';
-    DOSSIER_TREE = 'data/trees/';
+    PATH_DATA = 'data/';
+    PATH_USER = 'data/users/';
+    PATH_TREE = 'data/trees/';
+    FILE_EXT = '.dat';
 
 type
     { Les cases inutilisees de la liste contiennent ''. }
@@ -41,125 +41,70 @@ function loadTree(speciesName: string): TTree;
 function getAvailableSpecies(): TStringArray;
 
 { Compte les especes presentes dans la liste, au maximum MAX_SPECIES. }
-function getNbAvailableSpecies(): Word;
+function getNbAvailableSpecies(): LongInt;
 
 implementation
 
 function userExists(username: string): Boolean;
 begin
-    userExists := FileExists(DOSSIER_USR + username + '.dat');
+    userExists := FileExists(PATH_USER + username + FILE_EXT);
 end;
 
 procedure saveUser(user: TUser);
 var
-    f: file of TUser;
+    f: File of TUser;
 begin
-    if user.username = '' then
-        raise EInOutError.Create('Le pseudo ne peut pas etre vide.');
-    if not ForceDirectories(DOSSIER_USR) then
-        raise EInOutError.Create('Impossible de creer le dossier des utilisateurs.');
-
-    Assign(f, DOSSIER_USR + user.username + '.dat');
-    Rewrite(f);
-    try
-        { Write enregistre tout le record en une seule operation. }
-        Write(f, user);
-    finally
-        { Le fichier est ferme meme si une erreur survient. }
-        Close(f);
-    end;
+    assign(f, PATH_USER + getUsername(user) + FILE_EXT);
+    rewrite(f);
+    write(f, user);
+    close(f);
 end;
 
-function loadUser(username: string): TUser;
+function loadUser(username: String): TUser;
 var
-    f: file of TUser;
+    f: File of TUser;
     user: TUser;
 begin
-    user := initialiseUser();
-    if userExists(username) then
-    begin
-        Assign(f, DOSSIER_USR + username + '.dat');
-        Reset(f);
-        try
-            { FileSize compte les records, pas les octets. }
-            if FileSize(f) <> 1 then
-                raise EInOutError.Create('Le fichier doit contenir un utilisateur.');
-            Read(f, user);
-        finally
-            Close(f);
-        end;
-    end;
+    assign(f, PATH_USER + username + FILE_EXT);
+    reset(f);
+    read(f, user);
+    close(f);
     loadUser := user;
 end;
 
 function treeExists(speciesName: string): Boolean;
 begin
-    treeExists := FileExists(DOSSIER_TREE + speciesName + '.dat');
+    treeExists := FileExists(PATH_TREE + speciesName + '.dat');
 end;
 
 function loadTree(speciesName: string): TTree;
 var
-    f: file of TTree;
+    f: File of TTree;
     tree: TTree;
 begin
-    tree := initialiseTree();
-    if treeExists(speciesName) then
-    begin
-        Assign(f, DOSSIER_TREE + speciesName + '.dat');
-        Reset(f);
-        try
-            if FileSize(f) <> 1 then
-                raise EInOutError.Create('Le fichier doit contenir un arbre.');
-            { Read charge aussi les tableaux de phases du record. }
-            Read(f, tree);
-        finally
-            Close(f);
-        end;
-    end;
+    assign(f, PATH_TREE + speciesName + FILE_EXT);
+    reset(f);
+    read(f, tree);
+    close(f);
     loadTree := tree;
 end;
 
 function getAvailableSpecies(): TStringArray;
 var
+    f: File of TStringArray;
     tab: TStringArray;
-    search: TSearchRec;
-    i, count: LongInt;
 begin
-    for i := 1 to MAX_SPECIES do
-        tab[i] := '';
-    count := 0;
-
-    { FindFirst renvoie 0 lorsqu'un premier fichier est trouve. }
-    if FindFirst(DOSSIER_TREE + '*.dat', faAnyFile, search) = 0 then
-    begin
-        try
-            repeat
-                if (search.Attr and faDirectory) = 0 then
-                begin
-                    count := count + 1;
-                    tab[count] := ChangeFileExt(search.Name, '');
-                end;
-            until (count = MAX_SPECIES) or (FindNext(search) <> 0);
-        finally
-            FindClose(search);
-        end;
-    end;
+    assign(f, PATH_TREE + 'species' + FILE_EXT);
+    reset(f);
+    read(f, tab);
+    close(f);
     getAvailableSpecies := tab;
 end;
 
-function getNbAvailableSpecies(): Word;
-var
-    tab: TStringArray;
-    i: LongInt;
-    count: Word;
+function getNbAvailableSpecies(): LongInt;
 begin
-    { Reutilise la liste pour compter exactement les memes fichiers. }
-    tab := getAvailableSpecies();
-    count := 0;
-    for i := 1 to MAX_SPECIES do
-        if tab[i] <> '' then
-            count := count + 1;
-    getNbAvailableSpecies := count;
+    { I leave this function blank to verify what I wanted to do here after. No need to touch. }
+    getNbAvailableSpecies := 0;
 end;
 
 end.
