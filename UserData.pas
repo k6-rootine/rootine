@@ -26,21 +26,20 @@ interface
 
 
     {--- Date ---}
-    procedure initialiseDate(var date: TDate; day, month, year: LongInt);
+    function initialiseDate(day, month, year: LongInt): TDate;
     function getDay(date: TDate): LongInt;
     function getMonth(date: TDate): LongInt;
     function getYear(date: TDate): LongInt;
 
     {---Forest --}
-    procedure initialiseForest(var forest: TForest);
+    function initialiseForest(): TForest;
     function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
     function getNbSpecies(forest: TForest): LongInt;
     function findSpecies(forest: TForest; tree: string): LongInt;
     function getForestSpeciesName(forest: TForest; n: LongInt): string;
 
     {--User--}
-    procedure initialiseUser(var user: TUser);
-
+    function initialiseUser(): TUser;
 
     function getName(user: TUser): string;
     procedure setName(var user: TUser; name: string);
@@ -74,11 +73,15 @@ interface
 implementation
 
     {--DATE--}
-    procedure initialiseDate(var date: TDate; day, month, year: LongInt);
+    function initialiseDate(day, month, year: LongInt): TDate;
+    var 
+        date: TDate;
     begin
         date.day := day;
         date.month := month;
         date.year := year;
+
+        initialiseDate := date;
     end;
  
     function getDay(date: TDate): LongInt;
@@ -98,8 +101,9 @@ implementation
 
 
     {--FOREST-- }
-    procedure initialiseForest(var forest: TForest);
+    function initialiseForest(): TForest;
     var
+        forest : TForest;
         i : LongInt;
     begin
         forest.nbSpecies := 0;
@@ -108,6 +112,7 @@ implementation
             forest.speciesName[i] := '';
             forest.nbTreesGrown[i] := 0;
         end;
+        initialiseForest:= forest;
     end;
 
     function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
@@ -154,19 +159,20 @@ implementation
     end;
 
     {--USER--}
-    procedure initialiseUser(var user: TUser);
+    function initialiseUser(): TUser;
+    var
+        user : TUser;
     begin
         user.name := '';
         user.username := '';
         user.description := '';
- 
-        initialiseDate(user.joinDate, 0, 0, 0);
- 
+        user.joinDate := initialiseDate(0, 0, 0);
         user.nbSessionsDone := 0;
         user.nbCyclesDone := 0;
         user.totalFocusTime := 0;
- 
-        initialiseForest(user.forest);
+        user.forest := initialiseForest();
+        
+        initialiseUser := user;
     end;
 
     function getName(user: TUser): string;
