@@ -4,6 +4,7 @@ Cette unité gère tout ce qui est relatif aux minuteurs : la création, la mise
 unit TimerManager;
 
 interface 
+    { Un minuteur contenant le temps écoulé, la durée totale et un booléen indiquant si le minuteur est en pause. }
     type 
         TTimer = record 
             elapsedTime, duration: LongInt;
