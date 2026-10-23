@@ -57,7 +57,7 @@ interface
     procedure tick(var timer: TTimer; step: LongInt);
     {   
         @abstract(Avance le minuteur d'un certain temps)
-        Prend en entrée un minuteur @code(timer) et un temps @code(step) puis avance le minuteur de ce temps. Sans effet si le minuteur est en pause ou terminé.
+        Prend en entrée un minuteur @code(timer) et un temps @code(step) puis avance le minuteur de ce temps. Sans effet si le minuteur est en pause ou terminé, ou si le temps d'avancement est négatif. Si le temps d'avancement dépasse le temps restant, le minuteur est mis à jour pour être terminé.
         @param(timer Le minuteur à avancer.)
         @param(step Le temps d'avancement du minuteur.)
     }
@@ -73,7 +73,7 @@ interface
         Prend en entrée un minuteur @code(timer) et le reprend. Sans effet si le minuteur n'est pas en pause.
         @param(timer Le minuteur à reprendre.)
     }
-    procedure resetTimer(var timer: TTimer; duration: LongInt);
+
     { procedure resetTimer(var TTimer, duration: LongInt); 
         Note from Minh: don't write this procedure yet. i think this procedure is redundant and 
         it is actually initialiseTimer :))
@@ -119,17 +119,22 @@ implementation
 
     procedure tick(var timer: TTimer; step: LongInt);
     begin 
-        timer.elapsedTime := timer.elapsedTime + step;
+        if not timer.isPaused and not isFinished(timer) and (step > 0) and (step <= (timer.duration - timer.elapsedTime)) then
+            timer.elapsedTime := timer.elapsedTime + step
+        else if not timer.isPaused and not isFinished(timer) and (step > 0) and (step > (timer.duration - timer.elapsedTime)) then
+            timer.elapsedTime := timer.duration;
     end;
 
     procedure pauseTimer(var timer: TTimer);
     begin 
+    if not timer.isPaused and not isFinished(timer) then
         timer.isPaused := True;
 
     end;
 
     procedure resumeTimer(var timer: TTimer);
     begin 
+    if not isFinished(timer) then
         timer.isPaused := False;
     end;
 

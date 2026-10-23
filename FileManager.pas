@@ -98,10 +98,17 @@ var
     f: File of TUser;
     user: TUser;
 begin
-    assign(f, PATH_USER + username + FILE_EXT);
-    reset(f);
-    read(f, user);
-    close(f);
+    if userExists(username) then
+    begin
+        assign(f, PATH_USER + username + FILE_EXT);
+        reset(f);
+        read(f, user);
+        close(f);
+    end
+    else
+    begin
+        user := initialiseUser();
+    end;
     loadUser := user;
 end;
 
@@ -115,10 +122,18 @@ var
     f: File of TTree;
     tree: TTree;
 begin
-    assign(f, PATH_TREE + speciesName + FILE_EXT);
-    reset(f);
-    read(f, tree);
-    close(f);
+
+    if treeExists(speciesName) then
+    begin
+        assign(f, PATH_TREE + speciesName + FILE_EXT);
+        reset(f);
+        read(f, tree);
+        close(f);
+    end
+    else
+    begin
+        tree := initialiseTree();
+    end;
     loadTree := tree;
 end;
 
