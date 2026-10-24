@@ -66,7 +66,7 @@ implementation
 
     function getCurrentSession(cycle: TCycle): LongInt;
     begin
-        getCurrentSession := cycle.currentSession;                  {BURAYA BI GOZ AT NASIL DEGISIYOR CURRENT SESSION BILMIYPRUM}
+        getCurrentSession := cycle.currentSession;                  
     end;
 
     function getCurrentPhase(cycle: Tcycle): TPhaseSession;
@@ -95,7 +95,7 @@ implementation
     begin  
         cycle.currentSession := cycle.currentSession + 1;
         if cycle.focusDuration > 0 then
-            cycle.currentPhase := IN_PROGRESS;
+            cycle.State := IN_PROGRESS;
     end;
 
     procedure nextPhase(var cycle: TCycle);
