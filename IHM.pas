@@ -129,10 +129,27 @@ var
 begin 
     horizontalOffset := 30;
     verticalOffset := 18;
-    GoToXY(horizontalOffset, verticalOffset);
 
-    write('Veuillez entrer votre nom d''utilisateur : ');
-    readln(username);
+    {limit the input area to a specific window size to avoid text overflow}
+    Window(horizontalOffset, verticalOffset, horizontalOffset + 50, verticalOffset + 20);
+
+    {enter username. if doesn't exist or empty, ask again}
+    repeat
+        GoToXY(1, 1);
+        clreol;
+        write('Veuillez entrer votre nom d''utilisateur : ');
+        readln(username);
+
+        if not userExists(username) and (username <> '') then
+        begin
+            GoToXY(1, 2);
+            clreol;
+            writeln('Utilisateur inexistant. Veuillez reessayer.');
+        end;
+    until userExists(username) or (username = '');
+
+    {reset the window to the default size}
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end;
 
 procedure displayRegister(var fullname, username, description: String);
@@ -149,7 +166,7 @@ begin
     writeln('Attention ! ');
     writeln('- Les characteres speciaux ne sont pas autorises dans le nom complet.');
     writeln('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.');
-    writeln('- Le nom d''utilisateur ne peut pas etre vide.');
+    writeln('- Le nom d''utilisateur doit etre unique et entre 1 et 20 caracteres.');
     {enter full name, if invalid, ask again}
     writeln;
     repeat 
@@ -188,10 +205,6 @@ begin
         begin
             writeln('Nom d''utilisateur deja existant. Veuillez reessayer.');
         end
-        else if (username = '') then
-        begin
-            writeln('Le nom d''utilisateur ne peut pas etre vide.');
-        end
         else if not isValidUsername(username) then
         begin
             writeln('Nom d''utilisateur invalide. Veuillez reessayer.');
@@ -203,7 +216,7 @@ begin
     readln(description);
 
     {reset the window to the default size}
-    Window(horizontalOffset, verticalOffset, horizontalOffset + 90, verticalOffset + 20);
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end;
 
 procedure displayProfile(user: TUser);

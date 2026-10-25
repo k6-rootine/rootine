@@ -43,6 +43,12 @@ function isValidUsername(username: String): Boolean;
 var 
     i: LongInt;
 begin 
+    if (Length(username) < 1) or (Length(username) > 20) then
+    begin
+        isValidUsername := False;
+        Exit;
+    end;
+
     for i := 1 to Length(username) do
     begin
         if not (username[i] in ALLOWED_USERNAME_CHARS) then
