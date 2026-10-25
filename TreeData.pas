@@ -220,7 +220,7 @@ begin
     getTreeDescription := tree.description;
 end;
 
-procedure setDescription(var tree: TTree; description: String);
+procedure setTreeDescription(var tree: TTree; description: String);
 begin
     tree.description := description;
 end;
