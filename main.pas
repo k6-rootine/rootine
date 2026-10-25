@@ -8,19 +8,10 @@ var
     username: String;
 begin 
     clrscr;
-    repeat
-        RootineLogo(30, 5);
-        displayOuterBorder();
-        displayLogin(username);
-        
-        if not userExists(username) and (username <> '') then
-        begin 
-            clrscr;
-            GoToXY(30, 22);
-            write('Utilisateur inexistant. Veuillez reessayer.');
-        end;
-    until userExists(username) or (username = '');
-
+    RootineLogo(30, 5);
+    displayOuterBorder();
+    displayLogin(username);
+    
     if username <> '' then
     begin
         loadUser(username);
@@ -28,8 +19,16 @@ begin
 end;
 
 procedure handleRegisteration(var user: TUser);
+var 
+    fullname, username, description: String;
 begin 
-
+    clrscr;
+    RootineLogo(30, 5);
+    displayOuterBorder();
+    displayRegister(fullname, username, description);
+    setName(user, fullname);
+    setUsername(user, username);
+    setUserDescription(user, description);
 end;
 
 procedure handleViewForest(user: TUser);
