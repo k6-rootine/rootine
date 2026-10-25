@@ -108,7 +108,7 @@ procedure setSpeciesName(var tree: TTree; speciesName: String);
     @param(tree L'arbre consulté.)
     @returns(La description de l'espèce.)
 }
-function getDescription(tree: TTree): String;
+function getTreeDescription(tree: TTree): String;
 
 
 {
@@ -116,7 +116,7 @@ function getDescription(tree: TTree): String;
     @param(tree L'arbre modifié (passé par référence).)
     @param(description Nouvelle description de l'espèce.)
 }
-procedure setDescription(var tree: TTree; description: String);
+procedure setTreeDescription(var tree: TTree; description: String);
 
 
 {
@@ -215,9 +215,9 @@ begin
     tree.speciesName := speciesName;
 end;
 
-function getDescription(tree: TTree): String;
+function getTreeDescription(tree: TTree): String;
 begin
-    getDescription := tree.description;
+    getTreeDescription := tree.description;
 end;
 
 procedure setDescription(var tree: TTree; description: String);

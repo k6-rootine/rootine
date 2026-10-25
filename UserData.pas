@@ -50,8 +50,8 @@ interface
     function getusername(user: TUser): string;
 
 
-    procedure setDescription(var user: TUser; description: string);
-    function getDescription(user: TUser): string;
+    procedure setUserDescription(var user: TUser; description: string);
+    function getUserDescription(user: TUser): string;
 
 
     procedure setNbSessionsDone(var user: TUser; nb: LongInt);
@@ -164,9 +164,10 @@ implementation
     function initialiseUser(): TUser;
     var
         user : TUser;
-        dd, mm, yy : LongInt;
+        dd, mm, yy : Word;
     begin
         DecodeDate(Date, yy, mm, dd);
+
         user.name := '';
         user.username := '';
         user.description := '';
@@ -199,12 +200,12 @@ implementation
         user.username := username;
     end;
  
-    function getDescription(user: TUser): string;
+    function getUserDescription(user: TUser): string;
     begin
-        getDescription := user.description;
+        getUserDescription := user.description;
     end;
  
-    procedure setDescription(var user: TUser; description: string);
+    procedure setUserDescription(var user: TUser; description: string);
     begin
         user.description := description;
     end;

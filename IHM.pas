@@ -124,15 +124,37 @@ begin
 end;
 
 procedure displayLogin(var username: String);
+var
+    horizontalOffset, verticalOffset: LongInt;
 begin 
-    GoToXY(30, 20);
+    horizontalOffset := 30;
+    verticalOffset := 20;
+    GoToXY(horizontalOffset, verticalOffset);
+
     write('Veuillez entrer votre nom d''utilisateur : ');
     readln(username);
 end;
 
 procedure displayRegister(var fullname, username, description: String);
+var
+    horizontalOffset, verticalOffset: LongInt;
 begin 
+    horizontalOffset := 30;
+    verticalOffset := 20;
 
+    GoToXY(horizontalOffset, verticalOffset);
+    write('Attention ! Les charactères autorisés sont les lettres a-z, A-Z, les chiffres 0-9 et les caractères spéciaux suivants : _ - . , ');
+    GoToXY(horizontalOffset, verticalOffset + 1);
+    write('Les espaces ne sont pas autorisés uniquement pour le nom d''utilisateur.');
+    GoToXY(horizontalOffset, verticalOffset + 2);
+    write('Veuillez entrer votre nom complet : ');
+    readln(fullname);
+    GoToXY(horizontalOffset, verticalOffset + 3);
+    write('Veuillez entrer votre nom d''utilisateur : ');
+    readln(username);
+    GoToXY(horizontalOffset, verticalOffset + 4);
+    write('Veuillez entrer une description de votre profil : ');
+    readln(description);
 end;
 
 procedure displayProfile(user: TUser);
@@ -151,7 +173,7 @@ begin
 end;
 
 procedure displayCycleModeMenu(var mode: TMode);
-begin 
+begin
 
 end;
 
