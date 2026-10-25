@@ -128,11 +128,14 @@ var
     key: Char;
 begin 
     horizontalOffset := 40;
-    verticalOffset := 18;
+    verticalOffset := 20;
 
-    {limit the input area to a specific window size to avoid text overflow}
+    gotoXY(20, verticalOffset - 2);
+    writeln('Salut, ', getName(user), ' ! Pret a commencer une session de travail ? Veuillez choisir une option :');
+    writeln;
+
+    {limit the input area to a specific window size}
     Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
-    writeln('Salut, ', getName(user), ' ! Prêt à commencer une session de travail ? Veuillez choisir une option :');
     writeln('[1]   Demarrer une session de travail');
     writeln;
     writeln('[2]   Voir mon profil');

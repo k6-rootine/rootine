@@ -98,17 +98,11 @@ var
     f: File of TUser;
     user: TUser;
 begin
-    if userExists(username) then
-    begin
-        assign(f, PATH_USER + username + FILE_EXT);
-        reset(f);
-        read(f, user);
-        close(f);
-    end
-    else
-    begin
-        user := initialiseUser();
-    end;
+    assign(f, PATH_USER + username + FILE_EXT);
+    reset(f);
+    read(f, user);
+    close(f);
+    
     loadUser := user;
 end;
 

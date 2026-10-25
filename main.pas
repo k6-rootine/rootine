@@ -14,7 +14,7 @@ begin
     
     if username <> '' then
     begin
-        loadUser(username);
+        user := loadUser(username);
     end;
 end;
 
