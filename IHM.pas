@@ -125,17 +125,21 @@ end;
 procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
 var 
     horizontalOffset, verticalOffset: LongInt;
+    welcomeMessage: String;
     key: Char;
 begin 
     horizontalOffset := 40;
-    verticalOffset := 20;
+    verticalOffset := 18;
 
-    gotoXY(20, verticalOffset - 2);
-    writeln('Salut, ', getName(user), ' ! Pret a commencer une session de travail ? Veuillez choisir une option :');
+    welcomeMessage := 'Salut, ' + getName(user) + ' ! Pret a commencer une session de travail ?';
+    gotoXY((BORDER_WIDTH - Length(welcomeMessage)) div 2, verticalOffset - 2);
+    writeln(welcomeMessage);
     writeln;
 
     {limit the input area to a specific window size}
     Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    writeln('Veuillez choisir une option :');
+    writeln;
     writeln('[1]   Demarrer une session de travail');
     writeln;
     writeln('[2]   Voir mon profil');
