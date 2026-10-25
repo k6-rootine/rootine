@@ -2,7 +2,7 @@ unit IHM;
 
 interface
 uses 
-    UserData, TreeData, CycleData, crt;
+    UserData, TreeData, CycleData, FileManager, crt, Utilities;
 
 type
     TStartChoice = (IMPORT, REGISTER, QUIT_START, NONE);
@@ -94,16 +94,16 @@ var
     key: Char;
 begin 
     horizontalOffset := 40;
-    verticalOffset := 20;
-
-    gotoXY(horizontalOffset, verticalOffset); 
-    write('Bienvenue ! Veuillez choisir une option :');
-    gotoXY(horizontalOffset, verticalOffset + 1);
-    write('1. Importer un compte existant');
-    gotoXY(horizontalOffset, verticalOffset + 2);
-    write('2. Creer un nouveau compte');
-    gotoXY(horizontalOffset, verticalOffset + 3);
-    write('3. Quitter');
+    verticalOffset := 18;
+    Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    writeln('Bienvenue ! Veuillez choisir une option :');
+    writeln;
+    writeln('[1]   Importer un compte existant');
+    writeln;
+    writeln('[2]   Creer un nouveau compte');
+    writeln;
+    writeln('[3]   Quitter');
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 
     choice := NONE;
     repeat
@@ -128,7 +128,7 @@ var
     horizontalOffset, verticalOffset: LongInt;
 begin 
     horizontalOffset := 30;
-    verticalOffset := 20;
+    verticalOffset := 18;
     GoToXY(horizontalOffset, verticalOffset);
 
     write('Veuillez entrer votre nom d''utilisateur : ');
@@ -139,22 +139,71 @@ procedure displayRegister(var fullname, username, description: String);
 var
     horizontalOffset, verticalOffset: LongInt;
 begin 
-    horizontalOffset := 30;
-    verticalOffset := 20;
+    horizontalOffset := 15;
+    verticalOffset := 18;
 
-    GoToXY(horizontalOffset, verticalOffset);
-    write('Attention ! Les charactères autorisés sont les lettres a-z, A-Z, les chiffres 0-9 et les caractères spéciaux suivants : _ - . , ');
-    GoToXY(horizontalOffset, verticalOffset + 1);
-    write('Les espaces ne sont pas autorisés uniquement pour le nom d''utilisateur.');
-    GoToXY(horizontalOffset, verticalOffset + 2);
-    write('Veuillez entrer votre nom complet : ');
-    readln(fullname);
-    GoToXY(horizontalOffset, verticalOffset + 3);
-    write('Veuillez entrer votre nom d''utilisateur : ');
-    readln(username);
-    GoToXY(horizontalOffset, verticalOffset + 4);
+    {limit the input area to a specific window size to avoid text overflow}
+    Window(horizontalOffset, verticalOffset, horizontalOffset + 90, verticalOffset + 20);
+
+    {display instructions}
+    writeln('Attention ! ');
+    writeln('- Les characteres speciaux ne sont pas autorises dans le nom complet.');
+    writeln('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.');
+    writeln('- Le nom d''utilisateur ne peut pas etre vide.');
+    {enter full name, if invalid, ask again}
+    writeln;
+    repeat 
+        GoToXY(1, 6);
+        clreol;
+        write('Veuillez entrer votre nom complet : ');
+        readln(fullname);
+        
+        {remove previous error messages and clear the line for username input}
+        writeln;
+        GoToXY(1, 7);
+        clreol;
+
+        {display error message if full name is invalid}
+        if not isValidFullname(fullname) then
+        begin
+            writeln('Nom complet invalide. Veuillez reessayer.');
+        end;
+    until isValidFullname(fullname);
+
+    {enter username. if already exists or empty or invalid, ask again}
+    repeat 
+        writeln;
+        GoToXY(1, 8);
+        clreol;
+        write('Veuillez entrer votre nom d''utilisateur : ');
+        readln(username);
+        
+        {remove previous error messages and clear the line for description input}
+        writeln;
+        GoToXY(1, 9);
+        clreol; 
+
+        {display error messages if username is invalid, empty, or already exists}
+        if (userExists(username)) then
+        begin
+            writeln('Nom d''utilisateur deja existant. Veuillez reessayer.');
+        end
+        else if (username = '') then
+        begin
+            writeln('Le nom d''utilisateur ne peut pas etre vide.');
+        end
+        else if not isValidUsername(username) then
+        begin
+            writeln('Nom d''utilisateur invalide. Veuillez reessayer.');
+        end;
+    until (username <> '') and (not userExists(username)) and isValidUsername(username);
+
+    writeln;
     write('Veuillez entrer une description de votre profil : ');
     readln(description);
+
+    {reset the window to the default size}
+    Window(horizontalOffset, verticalOffset, horizontalOffset + 90, verticalOffset + 20);
 end;
 
 procedure displayProfile(user: TUser);
