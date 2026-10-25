@@ -4,8 +4,27 @@ uses
     FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM;
 
 procedure handleImport(var user: TUser);
+var 
+    username: String;
 begin 
+    clrscr;
+    repeat
+        RootineLogo(30, 5);
+        displayOuterBorder();
+        displayLogin(username);
+        
+        if not userExists(username) and (username <> '') then
+        begin 
+            clrscr;
+            GoToXY(30, 22);
+            write('Utilisateur inexistant. Veuillez reessayer.');
+        end;
+    until userExists(username) or (username = '');
 
+    if username <> '' then
+    begin
+        loadUser(username);
+    end;
 end;
 
 procedure handleRegisteration(var user: TUser);

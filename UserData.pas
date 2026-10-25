@@ -2,6 +2,8 @@
 unit UserData;
 
 interface
+    uses SysUtils;
+
     const MAX_SPECIES = 100;
 
    {saves the date of creation of the account}      
@@ -162,11 +164,13 @@ implementation
     function initialiseUser(): TUser;
     var
         user : TUser;
+        dd, mm, yy : LongInt;
     begin
+        DecodeDate(Date, yy, mm, dd);
         user.name := '';
         user.username := '';
         user.description := '';
-        user.joinDate := initialiseDate(0, 0, 0);
+        user.joinDate := initialiseDate(dd, mm, yy);
         user.nbSessionsDone := 0;
         user.nbCyclesDone := 0;
         user.totalFocusTime := 0;
