@@ -2,16 +2,16 @@ unit IHM;
 
 interface
 uses 
-    UserData, TreeData, CycleData, FileManager, crt, Utilities;
+    UserData, TreeData, CycleData, FileManager, crt, SysUtils, Utilities;
 
 type
-    TStartChoice = (IMPORT, REGISTER, QUIT_START, NONE);
-    TMainMenuChoice = (VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU);
+    TStartChoice = (IMPORT, REGISTER, QUIT_START, NONE_START);
+    TMainMenuChoice = (VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU, NONE_MAINMENU);
     TBrowseAction = (ACTION_NONE, NEXT, PREVIOUS, SELECT);
     TSessionAction = (SESSION_ACTION_NONE, TOGGLE_PAUSE, QUIT_SESSION, CHANGE_TREE);
 
 procedure displayStartMenu(var choice: TStartChoice);
-procedure displayMainMenu(var choice: TMainMenuChoice);
+procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
 procedure displayLogin(var username: String);
 procedure displayRegister(var fullname, username, description: String);
 procedure displayProfile(user: TUser);
@@ -95,6 +95,8 @@ var
 begin 
     horizontalOffset := 40;
     verticalOffset := 18;
+    
+    {limit the input area to a specific window size to avoid text overflow}
     Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
     writeln('Bienvenue ! Veuillez choisir une option :');
     writeln;
@@ -103,9 +105,11 @@ begin
     writeln('[2]   Creer un nouveau compte');
     writeln;
     writeln('[3]   Quitter');
+
+    {reset the window to the default size}
     Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 
-    choice := NONE;
+    choice := NONE_START;
     repeat
         key := ReadKey;
 
@@ -118,9 +122,45 @@ begin
     until choice in [IMPORT, REGISTER, QUIT_START];
 end;
 
-procedure displayMainMenu(var choice: TMainMenuChoice);
+procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
+var 
+    horizontalOffset, verticalOffset: LongInt;
+    key: Char;
 begin 
+    horizontalOffset := 40;
+    verticalOffset := 18;
 
+    {limit the input area to a specific window size to avoid text overflow}
+    Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    writeln('Salut, ', getName(user), ' ! Prêt à commencer une session de travail ? Veuillez choisir une option :');
+    writeln('[1]   Demarrer une session de travail');
+    writeln;
+    writeln('[2]   Voir mon profil');
+    writeln;
+    writeln('[3]   Voir ma foret');
+    writeln;
+    writeln('[4]   Se deconnecter');
+    writeln;
+    writeln('[5]   Quitter');
+
+    {reset the window to the default size}
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+
+    choice := NONE_MAINMENU;
+    repeat
+        key := ReadKey;
+
+        if (key = '1') then
+            choice := START
+        else if (key = '2') then
+            choice := VIEW_PROFILE
+        else if (key = '3') then
+            choice := VIEW_FOREST
+        else if (key = '4') then
+            choice := LOGOUT
+        else if (key = '5') then
+            choice := QUIT_MAINMENU;
+    until choice in [VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU];
 end;
 
 procedure displayLogin(var username: String);
