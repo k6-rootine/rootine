@@ -132,6 +132,7 @@ begin
     verticalOffset := 18;
 
     welcomeMessage := 'Salut, ' + getName(user) + ' ! Pret a commencer une session de travail ?';
+    {center the welcome message horizontally}
     gotoXY((BORDER_WIDTH - Length(welcomeMessage)) div 2, verticalOffset - 2);
     writeln(welcomeMessage);
     writeln;
@@ -211,7 +212,7 @@ begin
 
     {display instructions}
     writeln('Attention ! ');
-    writeln('- Les characteres speciaux ne sont pas autorises dans le nom complet.');
+    writeln('- Les characteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.');
     writeln('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.');
     writeln('- Le nom d''utilisateur doit etre unique et entre 1 et 20 caracteres.');
     {enter full name, if invalid, ask again}
@@ -219,7 +220,7 @@ begin
     repeat 
         GoToXY(1, 6);
         clreol;
-        write('Veuillez entrer votre nom complet : ');
+        write('Veuillez entrer votre prenom : ');
         readln(fullname);
         
         {remove previous error messages and clear the line for username input}
@@ -230,7 +231,7 @@ begin
         {display error message if full name is invalid}
         if not isValidFullname(fullname) then
         begin
-            writeln('Nom complet invalide. Veuillez reessayer.');
+            writeln('Prenom invalide. Veuillez reessayer.');
         end;
     until isValidFullname(fullname);
 

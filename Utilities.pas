@@ -12,7 +12,7 @@ function isValidFullname(fullname: String): Boolean;
 implementation
 const 
     ALLOWED_USERNAME_CHARS = ['a'..'z', 'A'..'Z', '0'..'9'];
-    ALLOWED_FULLNAME_CHARS = ['a'..'z', 'A'..'Z', ' '];
+    ALLOWED_FULLNAME_CHARS = ['a'..'z', 'A'..'Z', ' ', '-', ''''];
     BORDER_WIDTH = 120;
     BORDER_HEIGHT = 35;
 
