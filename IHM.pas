@@ -13,7 +13,7 @@ type
 procedure displayStartMenu(var choice: TStartChoice);
 procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
 procedure displayLogin(var username: String);
-procedure displayRegister(var fullname, username, description: String);
+procedure displayRegister(var firstname, username, description: String);
 procedure displayProfile(user: TUser);
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
 procedure displayTreeFull(tree: TTree);
@@ -200,7 +200,7 @@ begin
     Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end;
 
-procedure displayRegister(var fullname, username, description: String);
+procedure displayRegister(var firstname, username, description: String);
 var
     horizontalOffset, verticalOffset: LongInt;
 begin 
@@ -221,7 +221,7 @@ begin
         GoToXY(1, 6);
         clreol;
         write('Veuillez entrer votre prenom : ');
-        readln(fullname);
+        readln(firstname);
         
         {remove previous error messages and clear the line for username input}
         writeln;
@@ -229,11 +229,11 @@ begin
         clreol;
 
         {display error message if full name is invalid}
-        if not isValidFullname(fullname) then
+        if not isValidName(firstname) then
         begin
             writeln('Prenom invalide. Veuillez reessayer.');
         end;
-    until isValidFullname(fullname);
+    until isValidName(firstname);
 
     {enter username. if already exists or empty or invalid, ask again}
     repeat 
@@ -313,8 +313,38 @@ begin
 end;
 
 procedure renderClockArea(time: LongInt);
-begin 
+var 
+    m1, m2, s1, s2: LongInt;
+begin
+    { calculate each component of the clock }
+    m1 := (time div 60) div 10;
+    m2 := (time div 60) mod 10;
+    s1 := (time - (time div 60) * 60) div 10;
+    s2 := (time - (time div 60) * 60) mod 10;
 
+    {display m1}
+    Window(BORDER_TREE_VERTICAL + 3, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    GoToXY(1, 1);
+    displayClockNumber(m1);
+    {display m2}
+    Window(BORDER_TREE_VERTICAL + 11, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    GoToXY(1, 1);
+    displayClockNumber(m2);
+    {display colon}
+    Window(BORDER_TREE_VERTICAL + 18, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    GoToXY(1, 1);
+    displayClockNumber(-1);
+    {display s1}
+    Window(BORDER_TREE_VERTICAL + 23, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    GoToXY(1, 1);
+    displayClockNumber(s1);
+    {display s2}
+    Window(BORDER_TREE_VERTICAL + 31, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    GoToXY(1, 1);
+    displayClockNumber(s2);
+
+    {reset the window to the default size}
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end;
 
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
