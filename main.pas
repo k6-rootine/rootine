@@ -1,7 +1,7 @@
 program main;
 
 uses 
-    FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM;
+    FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM, crt, Utilities;
 
 procedure handleImport(var user: TUser);
 var 

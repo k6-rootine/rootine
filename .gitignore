@@ -28,4 +28,8 @@ bin/
 
 # macOS
 .DS_Store
+
+# other files
 testing.pas
+main
+testing
