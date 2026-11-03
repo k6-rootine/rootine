@@ -5,7 +5,7 @@
 *.a
 *.so
 *.dll
-*.dat
+*.user
 
 # Executables
 *.exe
