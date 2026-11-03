@@ -268,8 +268,33 @@ begin
 end;
 
 procedure displayProfile(user: TUser);
+var
+    horizontalOffset, verticalOffset: LongInt;
+    joinDate: TDate;
+    forest: TForest;
 begin 
+    {variables}
+    horizontalOffset := 30;
+    verticalOffset := 18;
+    joinDate := getJoinDate(user);
+    forest := getForest(user);
 
+    {limit the display area}
+    Window(horizontalOffset, verticalOffset, horizontalOffset + 60, verticalOffset + 20);
+
+    writeln('Nom d''utilisateur : ', getUsername(user));
+    writeln('Prenom : ', getName(user));
+    writeln('Date de creation du compte : ', Format('%.2d/%.2d/%4d', [getDay(joinDate), getMonth(joinDate), getYear(joinDate)]));
+    writeln('Description : ', getUserDescription(user));
+    writeln('Nombre de cycles completes : ', getNbCyclesDone(user));
+    writeln('Nombre de sessions completees : ', getNbSessionsDone(user));
+    writeln('Temps total de concentration : ', Format('%.2d:%.2d:%.2d', [getTotalFocusTime(user) div 3600, getTotalFocusTime(user) div 60 mod 60, getTotalFocusTime(user) mod 60]));
+    writeln('Nombre d''especes differentes ayant pousse : ', getNbSpecies(forest));
+    {writeln('Nombre total d''arbres ayant poussé : ', getNbTreesGrown(user));} 
+    {the function returns for only one species so this needs to be worked on}
+    
+    {reset the window to the default size}
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end; 
 
 procedure displayForestOverview(forest: TForest; var idx: LongInt);

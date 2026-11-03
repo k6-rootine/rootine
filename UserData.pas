@@ -98,7 +98,7 @@ interface
     procedure setUsername(var user: TUser; username: string);
 
     { @returns The username (login identifier) of the user. }
-    function getusername(user: TUser): string;
+    function getUsername(user: TUser): string;
 
     { Sets the description.
         @param user         The user to modify.
