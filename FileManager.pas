@@ -137,7 +137,7 @@ var
     f: File of TStringArray;
     tab: TStringArray;
 begin
-    assign(f, PATH_TREE + 'species' + FILE_EXT);
+    assign(f, PATH_TREE + 'species' + FILE_EXT_TREE);
     reset(f);
     read(f, tab);
     close(f);

@@ -336,6 +336,7 @@ procedure renderTreeArea(tree: TTree; treePhase: LongInt);
 var 
     vertical, horizontal: LongInt;
     phase: TPhase;
+    elem: Char;
 begin 
     phase := getPhase(tree, treePhase);
 
@@ -343,9 +344,14 @@ begin
     begin
         for horizontal := 1 to MAX_HORIZONTAL do
         begin
-            if ()
-            TextColor(Byte(TColor(getColor(phase, horizontal, vertical))));
-            write(getElement(phase, horizontal, vertical));
+            elem := getElement(phase, horizontal, vertical);
+
+            if elem <> ' ' then
+            begin 
+                GoToXY(horizontal, vertical);
+                TextColor(Byte(TColor(getColor(phase, horizontal, vertical))));
+                write(getElement(phase, horizontal, vertical));
+            end;
         end;
         writeln;
     end;
