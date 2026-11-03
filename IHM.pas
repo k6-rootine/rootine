@@ -333,8 +333,24 @@ begin
 end;
 
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
+var 
+    vertical, horizontal: LongInt;
+    phase: TPhase;
 begin 
+    phase := getPhase(tree, treePhase);
 
+    for vertical := 1 to MAX_VERTICAL do
+    begin
+        for horizontal := 1 to MAX_HORIZONTAL do
+        begin
+            if ()
+            TextColor(Byte(TColor(getColor(phase, horizontal, vertical))));
+            write(getElement(phase, horizontal, vertical));
+        end;
+        writeln;
+    end;
+
+    GoToXY(1, 1);
 end;
 
 procedure renderClockArea(time: LongInt);

@@ -12,7 +12,8 @@ const
     PATH_DATA = 'data/'; //< Chemin vers le dossier contenant les données.
     PATH_USER = 'data/users/'; //< Chemin vers le dossier contenant les fichiers de sauvegarde des utilisateurs.
     PATH_TREE = 'data/trees/'; //< Chemin vers le dossier contenant les fichiers de sauvegarde des arbres.
-    FILE_EXT = '.dat'; //< Extension des fichiers de sauvegarde.
+    FILE_EXT_USER = '.user'; //< Extension des fichiers de sauvegarde des utilisateurs.
+    FILE_EXT_TREE = '.dat'; //< Extension des fichiers de sauvegarde des arbres.
 
 type
 { Tableau contenant les noms des espèces d'arbres disponibles, au maximum @code(MAX_SPECIES). }
@@ -21,7 +22,7 @@ type
 
 {   
     @abstract(Vérifie si un utilisateur existe)
-    Elle cherche un fichier nommé @code(username.dat) dans le dossier @code(PATH_USER).
+    Elle cherche un fichier nommé @code(username.user) dans le dossier @code(PATH_USER).
     @param(username Le nom d'utilisateur à vérifier.)
     @returns(Un booléen indiquant si l'utilisateur existe.)
 }
@@ -30,7 +31,7 @@ function userExists(username: string): Boolean;
 
 {   
     @abstract(Enregistre un utilisateur dans un fichier.
-    Créé/actualise @code(username.dat) et remplace l'ancienne sauvegarde. Le pseudo doit être un nom de fichier valide, sans chemin.)
+    Créé/actualise @code(username.user) et remplace l'ancienne sauvegarde. Le pseudo doit être un nom de fichier valide, sans chemin.)
 }
 procedure saveUser(user: TUser);
 
@@ -80,14 +81,14 @@ implementation
 
 function userExists(username: string): Boolean;
 begin
-    userExists := FileExists(PATH_USER + username + FILE_EXT);
+    userExists := FileExists(PATH_USER + username + FILE_EXT_USER);
 end;
 
 procedure saveUser(user: TUser);
 var
     f: File of TUser;
 begin
-    assign(f, PATH_USER + getUsername(user) + FILE_EXT);
+    assign(f, PATH_USER + getUsername(user) + FILE_EXT_USER);
     rewrite(f);
     write(f, user);
     close(f);
@@ -98,7 +99,7 @@ var
     f: File of TUser;
     user: TUser;
 begin
-    assign(f, PATH_USER + username + FILE_EXT);
+    assign(f, PATH_USER + username + FILE_EXT_USER);
     reset(f);
     read(f, user);
     close(f);
@@ -108,7 +109,7 @@ end;
 
 function treeExists(speciesName: string): Boolean;
 begin
-    treeExists := FileExists(PATH_TREE + speciesName + '.dat');
+    treeExists := FileExists(PATH_TREE + speciesName + FILE_EXT_TREE);
 end;
 
 function loadTree(speciesName: string): TTree;
@@ -119,7 +120,7 @@ begin
 
     if treeExists(speciesName) then
     begin
-        assign(f, PATH_TREE + speciesName + FILE_EXT);
+        assign(f, PATH_TREE + speciesName + FILE_EXT_TREE);
         reset(f);
         read(f, tree);
         close(f);
