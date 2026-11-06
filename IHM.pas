@@ -33,13 +33,15 @@ procedure askConfirmation(msg: String; var answer: Boolean);
 procedure displayOuterBorder();
 procedure displayInnerBorder();
 procedure waitForKey();
+procedure renderStatsArea();
 
 const 
     BORDER_CHAR = '*';
-    BORDER_WIDTH = 120;
+    BORDER_WIDTH = 121;
     BORDER_HEIGHT = 35; { dimension w/o border is 118x33, w/ border is 120x35 }
     BORDER_TREE_VERTICAL = 80; { dimension of tree w/ border is 80x35, w/o border is 78x33 }
-    BORDER_CLOCK_HORIZONTAL = 20; { dimension of clock area w/ border is 40x20, w/o border is 38x18 }
+    BORDER_CLOCK_HORIZONTAL = 13; { dimension of clock area w/ border is 40x20, w/o border is 38x18 }
+    BORDER_STATS_HORIZONTAL = 20;
 
 implementation
 
@@ -80,8 +82,15 @@ begin
         write(BORDER_CHAR);
     end;
 
-    {display the separation line between the clock and the instructions areas}
+    {display the separation line between the clock and the stats areas}
     GotoXY(BORDER_TREE_VERTICAL + 1, BORDER_CLOCK_HORIZONTAL);
+    for width := BORDER_TREE_VERTICAL + 1 to BORDER_WIDTH - 1 do
+    begin
+        write(BORDER_CHAR);
+    end;
+
+    {display the separation line between the stats and instructions areas}
+    GotoXY(BORDER_TREE_VERTICAL + 1, BORDER_STATS_HORIZONTAL);
     for width := BORDER_TREE_VERTICAL + 1 to BORDER_WIDTH - 1 do
     begin
         write(BORDER_CHAR);
@@ -365,23 +374,23 @@ begin
     s2 := (time - (time div 60) * 60) mod 10;
 
     {display m1}
-    Window(BORDER_TREE_VERTICAL + 3, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    Window(BORDER_TREE_VERTICAL + 4, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
     GoToXY(1, 1);
     displayClockNumber(m1);
     {display m2}
-    Window(BORDER_TREE_VERTICAL + 11, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    Window(BORDER_TREE_VERTICAL + 12, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
     GoToXY(1, 1);
     displayClockNumber(m2);
     {display colon}
-    Window(BORDER_TREE_VERTICAL + 18, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    Window(BORDER_TREE_VERTICAL + 19, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
     GoToXY(1, 1);
     displayClockNumber(-1);
     {display s1}
-    Window(BORDER_TREE_VERTICAL + 23, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    Window(BORDER_TREE_VERTICAL + 24, 4 , BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
     GoToXY(1, 1);
     displayClockNumber(s1);
     {display s2}
-    Window(BORDER_TREE_VERTICAL + 31, 5, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    Window(BORDER_TREE_VERTICAL + 32, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
     GoToXY(1, 1);
     displayClockNumber(s2);
 
@@ -391,7 +400,40 @@ end;
 
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
 begin 
+    {restrict the area to the instructions area}
+    Window(BORDER_TREE_VERTICAL + 3, BORDER_STATS_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
+    GoToXY(1, 1);
 
+    if sessionPhase = FOCUS then
+    begin 
+        writeln('[1] Pause/Resume');
+        writeln;
+        writeln('[2] Quitter la session');
+    end
+    else
+    begin 
+        writeln('[1] Pause/Resume');
+        writeln;
+        writeln('[2] Quitter la session');
+        writeln;
+        writeln('[3] Passer a la prochaine session');
+        writeln;
+        writeln('[4] Changer d''arbre');
+    end;
+
+    {reset the window to the default size}
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+end;
+
+procedure renderStatsArea();
+begin
+    Window(BORDER_TREE_VERTICAL + 3, BORDER_CLOCK_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_STATS_HORIZONTAL - 1);
+
+    writeln('Phase actuelle: ');
+    writeln;
+    writeln('Session: ');
+
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end;
 
 procedure pollSessionInput(var action: TSessionAction);
