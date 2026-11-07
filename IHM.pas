@@ -8,7 +8,7 @@ type
     TStartChoice = (IMPORT, REGISTER, QUIT_START, NONE_START);
     TMainMenuChoice = (VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU, NONE_MAINMENU);
     TTreeChoice = (CONFIRM_TREE, PREVIEW_TREE, CANCEL_TREE, NONE_TREECHOICE);
-    TSessionAction = (SESSION_ACTION_NONE, TOGGLE_PAUSE, QUIT_SESSION, CHANGE_TREE);
+    TSessionAction = (TOGGLE_PAUSE, QUIT_SESSION, CHANGE_TREE, SKIP_PHASE, NONE_SA);
 
 procedure displayStartMenu(var choice: TStartChoice);
 procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
@@ -25,7 +25,7 @@ procedure displayTreeChoice(speciesName: String; var action: TTreeChoice);
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
 procedure renderClockArea(time: LongInt);
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
-procedure pollSessionInput(var action: TSessionAction);
+procedure pollSessionInput(sessionPhase: TPhaseSession; var action: TSessionAction);
 procedure displayCycleEnd(cycle: TCycle; success: Boolean);
 procedure displayOuterBorder();
 procedure displayInnerBorder();
@@ -38,6 +38,14 @@ const
     BORDER_TREE_VERTICAL = 80; { dimension of tree w/ border is 80x35, w/o border is 78x33 }
     BORDER_CLOCK_HORIZONTAL = 13; { dimension of clock area w/ border is 40x20, w/o border is 38x18 }
     BORDER_STATS_HORIZONTAL = 20;
+
+    LOGO_X = 30; { position of the RootineLogo }
+    LOGO_Y = 5;
+    HEADING_ROW = 16; { row of the centred heading under the logo }
+    CONTENT_ROW = 18; { first row of the content area under the heading }
+    MENU_X = 40; { left column of the menus and choices }
+    LIST_X = 30; { left column of the lists, login and profile }
+    FORM_X = 15; { left column of the register form }
 
 implementation
 
@@ -142,8 +150,6 @@ begin
 end;
 
 procedure displayInnerBorder();
-var
-    width : LongInt;
 begin
     {display the separation line between the tree and the clock/stats/instructions areas}
     drawVerticalSeparator();
@@ -157,14 +163,11 @@ end;
 
 procedure displayStartMenu(var choice: TStartChoice);
 var 
-    horizontalOffset, verticalOffset: LongInt;
     key: Char;
 begin 
-    horizontalOffset := 40;
-    verticalOffset := 18;
     
     {limit the input area to a specific window size to avoid text overflow}
-    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, CONTENT_ROW + 20);
     writeln('Bienvenue ! Veuillez choisir une option :');
     writeln;
     writeln('[1]   Importer un compte existant');
@@ -191,21 +194,21 @@ end;
 
 procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
 var 
-    horizontalOffset, verticalOffset: LongInt;
     welcomeMessage: String;
     key: Char;
 begin 
-    horizontalOffset := 40;
-    verticalOffset := 18;
-
-    welcomeMessage := 'Salut, ' + getName(user) + ' ! Pret a commencer une session de travail ?';
+    if getName(user) = '' then
+        welcomeMessage := 'Salut, ' + getUsername(user) + ' ! Pret a commencer une session de travail ?'
+    else
+        welcomeMessage := 'Salut, ' + getName(user) + ' ! Pret a commencer une session de travail ?';
+    
     {center the welcome message horizontally}
-    gotoXY((BORDER_WIDTH - Length(welcomeMessage)) div 2, verticalOffset - 2);
+    gotoXY((BORDER_WIDTH - Length(welcomeMessage)) div 2, HEADING_ROW);
     writeln(welcomeMessage);
     writeln;
 
     {limit the input area to a specific window size}
-    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, CONTENT_ROW + 20);
     writeln('Veuillez choisir une option :');
     writeln;
     writeln('[1]   Demarrer une session de travail');
@@ -239,14 +242,10 @@ begin
 end;
 
 procedure displayLogin(var username: String);
-var
-    horizontalOffset, verticalOffset: LongInt;
 begin 
-    horizontalOffset := 30;
-    verticalOffset := 18;
 
     {limit the input area to a specific window size to avoid text overflow}
-    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 50, verticalOffset + 20);
+    enterArea(LIST_X, CONTENT_ROW, LIST_X + 50, CONTENT_ROW + 20);
 
     {enter username. if doesn't exist or empty, ask again}
     repeat
@@ -269,14 +268,10 @@ begin
 end;
 
 procedure displayRegister(var firstname, username, description: String);
-var
-    horizontalOffset, verticalOffset: LongInt;
 begin 
-    horizontalOffset := 15;
-    verticalOffset := 18;
 
     {limit the input area to a specific window size to avoid text overflow}
-    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 90, verticalOffset + 20);
+    enterArea(FORM_X, CONTENT_ROW, FORM_X + 90, CONTENT_ROW + 20);
 
     {display instructions}
     writeln('Attention ! ');
@@ -341,13 +336,11 @@ end;
 
 procedure displayProfile(user: TUser);
 var
-    horizontalOffset, verticalOffset, i, totalTrees: LongInt;
+    i, totalTrees: LongInt;
     joinDate: TDate;
     forest: TForest;
 begin
     {variables}
-    horizontalOffset := 30;
-    verticalOffset := 18;
     joinDate := getJoinDate(user);
     forest := getForest(user);
 
@@ -357,7 +350,7 @@ begin
         totalTrees := totalTrees + getNbTreesGrown(forest, i);
 
     {limit the display area}
-    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 60, verticalOffset + 20);
+    enterArea(LIST_X, CONTENT_ROW, LIST_X + 60, CONTENT_ROW + 20);
 
     {display all information}
     writeln('Nom d''utilisateur : ', getUsername(user));
@@ -373,9 +366,54 @@ begin
     leaveArea();
 end; 
 
+{ idx is the number of the chosen species (1..N), or 0 for "Retour" or an empty forest }
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
-begin 
+const
+    ROWS_PER_COLUMN = 7;
+    COLUMN_WIDTH = 30;
+var
+    i, nbSpecies: LongInt;
+    heading: String;
+begin
+    nbSpecies := getNbSpecies(forest);
 
+    clrscr;
+    RootineLogo(LOGO_X, LOGO_Y);
+    displayOuterBorder();
+
+    if nbSpecies = 0 then
+    begin
+        heading := 'Votre foret est vide pour le moment.';
+        GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
+        write(heading);
+        enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+        writeln('Terminez une session de concentration pour faire pousser votre premier arbre.');
+        writeln;
+        write('Appuyez sur une touche pour revenir...');
+        leaveArea();
+        readkey;
+        idx := 0;
+    end
+    else
+    begin
+        heading := 'Votre foret : choisissez une espece a afficher :';
+        GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
+        write(heading);
+
+        {species are listed in columns of ROWS_PER_COLUMN entries, with their tree count}
+        enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+        for i := 1 to nbSpecies do
+        begin
+            GoToXY(1 + ((i - 1) div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + ((i - 1) mod ROWS_PER_COLUMN));
+            write('[', i, ']   ', getForestSpeciesName(forest, i), ' (x', getNbTreesGrown(forest, i), ')');
+        end;
+        GoToXY(1, ROWS_PER_COLUMN + 2);
+        write('[0]   Retour');
+
+        GoToXY(1, ROWS_PER_COLUMN + 4);
+        idx := readInteger('Votre choix : ', 0, nbSpecies);
+        leaveArea();
+    end;
 end;
 
 procedure displayTreeFull(tree: TTree);
@@ -387,8 +425,7 @@ begin
     renderTreeArea(tree, getNbPhases(tree));
 
     enterArea(BORDER_TREE_VERTICAL + 3, 3, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
-    writeln(UpperCase(getSpeciesName(tree)));
-    writeln(StringOfChar('-', Length(getSpeciesName(tree))));
+    writeln(uppercase(getSpeciesName(tree)));
     writeln('Apercu de l''etat final');
     writeln;
     writeln(getTreeDescription(tree));
@@ -473,14 +510,14 @@ begin
     heading := 'Selectionnez un arbre a faire pousser :';
 
     clrscr;
-    RootineLogo(30, 5);
+    RootineLogo(LOGO_X, LOGO_Y);
     displayOuterBorder();
     {center the heading horizontally}
-    GoToXY((BORDER_WIDTH - Length(heading)) div 2, 16);
+    GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
     write(heading);
 
     {species are listed in columns of ROWS_PER_COLUMN entries}
-    enterArea(30, 18, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+    enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
     for i := 0 to nbSpecies - 1 do
     begin
         GoToXY(1 + (i div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + (i mod ROWS_PER_COLUMN));
@@ -502,13 +539,13 @@ begin
     heading := 'Vous avez choisi : ' + speciesName;
 
     clrscr;
-    RootineLogo(30, 5);
+    RootineLogo(LOGO_X, LOGO_Y);
     displayOuterBorder();
     {center the heading horizontally}
-    GoToXY((BORDER_WIDTH - Length(heading)) div 2, 16);
+    GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
     write(heading);
 
-    enterArea(40, 18, 80, BORDER_HEIGHT - 2);
+    enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, BORDER_HEIGHT - 2);
     writeln('[1]   Confirmer ce choix');
     writeln;
     writeln('[2]   Voir un apercu de l''arbre');
@@ -618,14 +655,66 @@ begin
     leaveArea();
 end;
 
-procedure pollSessionInput(var action: TSessionAction);
-begin 
+procedure pollSessionInput(sessionPhase: TPhaseSession; var action: TSessionAction);
+var
+    key: Char;
+begin
+    action := NONE_SA;
 
+    if KeyPressed then
+    begin
+        key := ReadKey;
+
+        if key = #0 then
+            ReadKey {special keys send a second code that must be skipped}
+        else if key = '1' then
+            action := TOGGLE_PAUSE
+        else if key = '2' then
+            action := QUIT_SESSION
+        else if (sessionPhase <> FOCUS) and (key = '3') then
+            action := SKIP_PHASE
+        else if (sessionPhase <> FOCUS) and (key = '4') then
+            action := CHANGE_TREE;
+    end;
 end;
 
 procedure displayCycleEnd(cycle: TCycle; success: Boolean);
-begin 
+var
+    heading, modeName: String;
+    nbSessionsDone: LongInt;
+begin
+    {a cycle can only succeed from a break (the current session is complete) and only be abandoned during a focus phase (the current session is unfinished)}
+    if success then
+    begin
+        heading := 'Cycle termine, bravo !';
+        nbSessionsDone := getCurrentSession(cycle);
+    end
+    else
+    begin
+        heading := 'Cycle abandonne : l''arbre en cours n''a pas survecu.';
+        nbSessionsDone := getCurrentSession(cycle) - 1;
+    end;
 
+    if getMode(cycle) = POMODORO then
+        modeName := 'Pomodoro'
+    else
+        modeName := 'Personnalise';
+
+    clrscr;
+    RootineLogo(LOGO_X, LOGO_Y);
+    displayOuterBorder();
+    {center the heading horizontally}
+    GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
+    write(heading);
+
+    enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, BORDER_HEIGHT - 2);
+    writeln('Mode : ', modeName);
+    writeln;
+    writeln('Sessions de concentration terminees : ', nbSessionsDone);
+    writeln;
+    write('Appuyez sur une touche pour continuer...');
+    leaveArea();
+    readkey;
 end;
 
 end.

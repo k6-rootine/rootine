@@ -11,3 +11,4 @@
 - Changed get/set description function names to avoid duplication.
 - Introduced private helpers (enterArea, leaveArea,...)
 - Remove unnecessary functions/procedures that we thought was useful (askConfirmation, displayMessage, displayError, etc)
+- Removal of TStringArray in FileManager since SysUtils already has that

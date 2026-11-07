@@ -66,10 +66,6 @@ interface
     @param cycle Le cycle à réinitialiser (modifié). }
     procedure abandonCycle(var cycle: Tcycle);
 
-
-
-
-
 implementation 
 
     function initialiseCycle(mode: TMode; focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt): TCycle;

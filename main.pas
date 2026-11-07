@@ -8,7 +8,7 @@ var
     username: String;
 begin
     clrscr;
-    RootineLogo(30, 5);
+    RootineLogo(LOGO_X, LOGO_Y);
     displayOuterBorder();
     displayLogin(username);
 
@@ -26,7 +26,7 @@ var
     fullname, username, description: String;
 begin
     clrscr;
-    RootineLogo(30, 5);
+    RootineLogo(LOGO_X, LOGO_Y);
     displayOuterBorder();
     displayRegister(fullname, username, description);
     setName(user, fullname);
@@ -51,7 +51,7 @@ end;
 procedure handleViewProfile(user: TUser);
 begin
     clrscr;
-    RootineLogo(30, 5);
+    RootineLogo(LOGO_X, LOGO_Y);
     displayOuterBorder();
     displayProfile(user);
     readkey;
@@ -165,7 +165,7 @@ begin
 
     repeat 
         clrscr;
-        RootineLogo(30, 5);
+        RootineLogo(LOGO_X, LOGO_Y);
         displayOuterBorder();
         displayMainMenu(choice, user);
 
@@ -210,7 +210,7 @@ begin
     repeat
         isLoggedIn := False;
         clrscr;
-        RootineLogo(30, 5);
+        RootineLogo(LOGO_X, LOGO_Y);
         displayOuterBorder();
         displayStartMenu(choice);
 
