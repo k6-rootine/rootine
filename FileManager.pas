@@ -16,8 +16,8 @@ const
     FILE_EXT_TREE = '.dat'; //< Extension des fichiers de sauvegarde des arbres.
 
 type
-{ Tableau contenant les noms des espèces d'arbres disponibles, au maximum @code(MAX_SPECIES). }
-    TStringArray = array[1..MAX_SPECIES] of string;
+{ Tableau contenant les noms des espèces d'arbres disponibles. }
+    TStringArray = Array of String;
 
 
 {   
@@ -71,11 +71,10 @@ function getAvailableSpecies(): TStringArray;
 { 
 
     @abstract(Compte les espèces présentes dans la liste)
-    Compte les espèces presentes dans la liste, au maximum @code(MAX_SPECIES).    
     @returns(Un entier représentant le nombre d'espèces présentes dans la liste.)
 
 }
-function getNbAvailableSpecies(): LongInt;
+function getNbAvailableSpecies(availableSpecies: TStringArray): LongInt;
 
 implementation
 
@@ -134,20 +133,26 @@ end;
 
 function getAvailableSpecies(): TStringArray;
 var
-    f: File of TStringArray;
+    f: Text;
+    line: String;
     tab: TStringArray;
 begin
-    assign(f, PATH_TREE + 'species' + FILE_EXT_TREE);
+    assign(f, PATH_DATA + 'species.txt');
     reset(f);
-    read(f, tab);
+    setlength(tab, 0);
+    while not eof(f) do
+    begin
+        readln(f, line);
+        setlength(tab, length(tab) + 1);
+        tab[length(tab) - 1] := line;
+    end;
     close(f);
     getAvailableSpecies := tab;
 end;
 
-function getNbAvailableSpecies(): LongInt;
+function getNbAvailableSpecies(availableSpecies: TStringArray): LongInt;
 begin
-    { I leave this function blank to verify what I wanted to do here after. No need to touch. }
-    getNbAvailableSpecies := 0;
+    getNbAvailableSpecies := length(availableSpecies);
 end;
 
 end.

@@ -8,13 +8,13 @@ interface
         {Le type de cycle.
             CUSTOM : les durées sont choisies par l'utilisateur.
             POMODORO : le cycle Pomodoro classique. L'unité ne définit pas elle-même de valeurs par défaut, l'appelant doit les passer à initialiseCycle. }
-        TMode = (CUSTOM, POMODORO);
+        TMode = (CUSTOM, POMODORO, NONE_MODE);
 
         {La phase de la session dans laquelle se trouve actuellement l'utilisateur. (Avec LONG_BREAK toutes les N sessions de concentration)}
-        TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK);
+        TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK, NONE_PS);
 
         {L'état du cycle dans lequel se trouve actuellement l'utilisateur.}
-        TState = (NOT_STARTED, IN_PROGRESS, FINISHED);
+        TState = (NOT_STARTED, IN_PROGRESS, FINISHED, NONE_STATE);
 
         {Description complète d'un cycle.}
         TCycle = Record

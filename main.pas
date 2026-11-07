@@ -54,13 +54,55 @@ begin
 end;
 
 function selectTree(): TTree;
+var
+    availableSpecies: TStringArray;
+    i, nbSpecies: LongInt;
 begin 
+    {   1. Display available trees (by name)
+        2. Get user input for tree selection
+        3. Confirm selection
+        4. Get tree data from file and return it
+    }
+    availableSpecies := getAvailableSpecies();
+    nbSpecies := getNbAvailableSpecies(availableSpecies);
 
+    clrscr;
+    writeln('Selectionnez un arbre parmi les suivants:');
+
+    for i := 0 to nbSpecies - 1 do
+    begin
+        writeln(i + 1, '. ', availableSpecies[i]);
+    end;
+
+    repeat 
+        write('Entrez le numero de l''arbre que vous souhaitez selectionner: ');
+        readln(i);
+    until (i >= 1) and (i <= nbSpecies);
+
+    selectTree := loadTree(availableSpecies[i - 1]);
 end;
 
 function selectMode(): TCycle;
+var 
+    mode: TMode;
+    cycle: TCycle;
+    focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt;
 begin 
-
+    displayCycleModeMenu(mode);
+    focusDuration := 25 * 60;
+    shortBreakDuration := 5 * 60;
+    longBreakDuration := 15 * 60;
+    nbSessionsBeforeLongBreak := 4;
+    
+    if mode = CUSTOM then
+    begin 
+        displayCustomConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
+        cycle := initialiseCycle(CUSTOM, focusDuration * 60, shortBreakDuration * 60, longBreakDuration * 60, nbSessionsBeforeLongBreak);
+    end
+    else if mode = POMODORO then
+        displayPomodoroConfiguration();
+    
+    selectMode := cycle;
 end;
 
 procedure startNewCycle(var cycle: TCycle; var timer: TTimer);
@@ -92,6 +134,9 @@ procedure runSession(var user: TUser; var isQuit: Boolean);
 var 
     isLogout: Boolean;
     choice: TMainMenuChoice;
+    tree: TTree;
+    cycle: TCycle;
+    timer: TTimer;
 begin 
     isLogout := False;
 
@@ -121,7 +166,11 @@ begin
         end
         else if choice = START then
         begin 
-
+            tree := selectTree();
+            cycle := selectMode();
+            startNewCycle(cycle, timer);
+            mainSessionLoop(tree, cycle, user, timer);
+            handleSessionEnd(user, cycle);
         end;
     until isLogout or isQuit;
 end;

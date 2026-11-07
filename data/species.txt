@@ -1,0 +1,13 @@
+acacia
+banyan
+baobab
+birch
+cherry
+ginkgo
+maple
+oak
+palm
+redwood
+sakura
+spruce
+willow

@@ -317,18 +317,66 @@ begin
 end;
 
 procedure displayCycleModeMenu(var mode: TMode);
+var 
+    key: Char;
+    isReturn: Boolean;
 begin
+    isReturn := False;
+    mode := NONE_MODE;
 
+    repeat
+        clrscr;
+        writeln('Veuillez choisir un mode de cycle :');
+        writeln('[1]   Mode Pomodoro ');
+        writeln('[2]   Mode Personnalise');
+        writeln('[3]   Retour');
+
+        key := ReadKey;
+        if (key = '1') then
+            mode := POMODORO
+        else if (key = '2') then
+            mode := CUSTOM
+        else if (key = '3') then
+            isReturn := True;
+    until (mode in [POMODORO, CUSTOM]) or isReturn;
 end;
 
 procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt);
 begin 
+    clrscr;
+    writeln('Veuillez entrer les parametres de configuration du mode personnalise :');
+    writeln('Attention : La duree maximale de chaque parametre est de 90 minutes.');
+    writeln('Duree de concentration (en minutes) : ');
+    read(focusDuration);
+    writeln('Duree de pause courte (en minutes) : ');
+    read(shortBreakDuration);
+    writeln('Duree de pause longue (en minutes) : ');
+    read(longBreakDuration);
+    writeln('Nombre de sessions avant une pause longue : ');
+    read(nbSessionsBeforeLongBreak);
 
+    clrscr;
+    writeln('Ci-dessous la configuration que vous avez choisie :');
+    writeln('Duree de concentration : ', focusDuration, ' minutes');
+    writeln('Duree de pause courte : ', shortBreakDuration, ' minutes');
+    writeln('Duree de pause longue : ', longBreakDuration, ' minutes');
+    writeln('Nombre de sessions avant une pause longue : ', nbSessionsBeforeLongBreak);
+
+    writeln('Appuyez sur une touche pour continuer...');
+    readkey;
 end;
 
 procedure displayPomodoroConfiguration();
 begin 
+    clrscr;
+    writeln('Configuration du mode Pomodoro :');
+    writeln('Duree de concentration : 25 minutes');
+    writeln('Duree de pause courte : 5 minutes');
+    writeln('Duree de pause longue : 15 minutes');
+    writeln('Nombre de sessions avant une pause longue : 4');
 
+    writeln('Appuyez sur une touche pour continuer...');
+    readkey;
 end;
 
 procedure renderTreePreview(tree: TTree; currentIdx, totalCnt: LongInt);
