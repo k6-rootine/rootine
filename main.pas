@@ -3,25 +3,29 @@ program main;
 uses 
     FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM, crt, Utilities;
 
-procedure handleImport(var user: TUser);
-var 
+{ Returns True if a user was loaded, False if the user cancelled (empty username). }
+function handleImport(var user: TUser): Boolean;
+var
     username: String;
-begin 
+begin
     clrscr;
     RootineLogo(30, 5);
     displayOuterBorder();
     displayLogin(username);
-    
+
     if username <> '' then
     begin
         user := loadUser(username);
-    end;
+        handleImport := True;
+    end
+    else
+        handleImport := False;
 end;
 
-procedure handleRegisteration(var user: TUser);
-var 
+procedure handleRegistration(var user: TUser);
+var
     fullname, username, description: String;
-begin 
+begin
     clrscr;
     RootineLogo(30, 5);
     displayOuterBorder();
@@ -29,6 +33,7 @@ begin
     setName(user, fullname);
     setUsername(user, username);
     setUserDescription(user, description);
+    saveUser(user);
 end;
 
 procedure handleViewForest(user: TUser);
@@ -82,27 +87,42 @@ begin
     selectTree := loadTree(availableSpecies[i - 1]);
 end;
 
-function selectMode(): TCycle;
-var 
+{ Restricts a value to the range [minValue, maxValue]. }
+function clamp(value, minValue, maxValue: LongInt): LongInt;
+begin
+    if value < minValue then
+        clamp := minValue
+    else if value > maxValue then
+        clamp := maxValue
+    else
+        clamp := value;
+end;
+
+function selectMode(var cycle: TCycle): Boolean;
+var
     mode: TMode;
-    cycle: TCycle;
     focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt;
-begin 
+begin
     displayCycleModeMenu(mode);
-    focusDuration := 25 * 60;
-    shortBreakDuration := 5 * 60;
-    longBreakDuration := 15 * 60;
-    nbSessionsBeforeLongBreak := 4;
-    
-    if mode = CUSTOM then
-    begin 
-        displayCustomConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
-        cycle := initialiseCycle(CUSTOM, focusDuration * 60, shortBreakDuration * 60, longBreakDuration * 60, nbSessionsBeforeLongBreak);
-    end
-    else if mode = POMODORO then
+    selectMode := True;
+
+    if mode = POMODORO then
+    begin
         displayPomodoroConfiguration();
-    
-    selectMode := cycle;
+        cycle := initialiseCycle(POMODORO, 25 * 60, 5 * 60, 15 * 60, 4);
+    end
+    else if mode = CUSTOM then
+    begin
+        displayCustomConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
+        { durations are entered in minutes (1..90) and stored in seconds }
+        focusDuration := clamp(focusDuration, 1, 90) * 60;
+        shortBreakDuration := clamp(shortBreakDuration, 1, 90) * 60;
+        longBreakDuration := clamp(longBreakDuration, 1, 90) * 60;
+        nbSessionsBeforeLongBreak := clamp(nbSessionsBeforeLongBreak, 1, 99);
+        cycle := initialiseCycle(CUSTOM, focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
+    end
+    else
+        selectMode := False;
 end;
 
 procedure startNewCycle(var cycle: TCycle; var timer: TTimer);
@@ -171,43 +191,46 @@ begin
         else if choice = START then
         begin 
             tree := selectTree();
-            cycle := selectMode();
-
-            startNewCycle(cycle, timer);
-            mainSessionLoop(tree, cycle, user, timer);
-            handleSessionEnd(user, cycle);
+            if selectMode(cycle) then
+            begin
+                startNewCycle(cycle, timer);
+                mainSessionLoop(tree, cycle, user, timer);
+                handleSessionEnd(user, cycle);
+            end;
         end;
     until isLogout or isQuit;
 end;
 
-var 
+var
     user: TUser;
-    isQuit: Boolean;
+    isQuit, isLoggedIn: Boolean;
     choice: TStartChoice;
-begin  
+begin
     isQuit := False;
 
-    repeat 
+    repeat
+        isLoggedIn := False;
         clrscr;
         RootineLogo(30, 5);
         displayOuterBorder();
         displayStartMenu(choice);
 
         if choice = IMPORT then
-        begin 
-            handleImport(user);
+        begin
+            isLoggedIn := handleImport(user);
         end
         else if choice = REGISTER then
-        begin 
+        begin
             user := initialiseUser();
-            handleRegisteration(user);
+            handleRegistration(user);
+            isLoggedIn := True;
         end
         else if choice = QUIT_START then
         begin
             isQuit := True;
         end;
 
-        if not isQuit then
+        if isLoggedIn then
             runSession(user, isQuit);
     until isQuit;
 

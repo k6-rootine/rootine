@@ -45,6 +45,19 @@ const
 
 implementation
 
+{ restricts the output to a rectangular area of the console (corners are inclusive) }
+procedure enterArea(x1, y1, x2, y2: LongInt);
+begin
+    Window(x1, y1, x2, y2);
+    GoToXY(1, 1);
+end;
+
+{ resets the output to the whole console }
+procedure leaveArea();
+begin
+    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+end;
+
 procedure displayOuterBorder();
 var 
     width, height : LongInt;
@@ -106,7 +119,7 @@ begin
     verticalOffset := 18;
     
     {limit the input area to a specific window size to avoid text overflow}
-    Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
     writeln('Bienvenue ! Veuillez choisir une option :');
     writeln;
     writeln('[1]   Importer un compte existant');
@@ -116,7 +129,7 @@ begin
     writeln('[3]   Quitter');
 
     {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    leaveArea();
 
     choice := NONE_START;
     repeat
@@ -147,7 +160,7 @@ begin
     writeln;
 
     {limit the input area to a specific window size}
-    Window(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
+    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 40, verticalOffset + 20);
     writeln('Veuillez choisir une option :');
     writeln;
     writeln('[1]   Demarrer une session de travail');
@@ -161,7 +174,7 @@ begin
     writeln('[5]   Quitter');
 
     {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    leaveArea();
 
     choice := NONE_MAINMENU;
     repeat
@@ -188,7 +201,7 @@ begin
     verticalOffset := 18;
 
     {limit the input area to a specific window size to avoid text overflow}
-    Window(horizontalOffset, verticalOffset, horizontalOffset + 50, verticalOffset + 20);
+    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 50, verticalOffset + 20);
 
     {enter username. if doesn't exist or empty, ask again}
     repeat
@@ -207,7 +220,7 @@ begin
     until userExists(username) or (username = '');
 
     {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    leaveArea();
 end;
 
 procedure displayRegister(var firstname, username, description: String);
@@ -218,7 +231,7 @@ begin
     verticalOffset := 18;
 
     {limit the input area to a specific window size to avoid text overflow}
-    Window(horizontalOffset, verticalOffset, horizontalOffset + 90, verticalOffset + 20);
+    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 90, verticalOffset + 20);
 
     {display instructions}
     writeln('Attention ! ');
@@ -278,8 +291,7 @@ begin
     write('Veuillez entrer une description de votre profil : ');
     readln(description);
 
-    {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    leaveArea();
 end;
 
 procedure displayProfile(user: TUser);
@@ -295,7 +307,7 @@ begin
     forest := getForest(user);
 
     {limit the display area}
-    Window(horizontalOffset, verticalOffset, horizontalOffset + 60, verticalOffset + 20);
+    enterArea(horizontalOffset, verticalOffset, horizontalOffset + 60, verticalOffset + 20);
 
     writeln('Nom d''utilisateur : ', getUsername(user));
     writeln('Prenom : ', getName(user));
@@ -307,9 +319,8 @@ begin
     writeln('Nombre d''especes differentes ayant pousse : ', getNbSpecies(forest));
     {writeln('Nombre total d''arbres ayant poussé : ', getNbTreesGrown(user));} 
     {the function returns for only one species so this needs to be worked on}
-    
-    {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+
+    leaveArea();
 end; 
 
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
@@ -417,8 +428,16 @@ begin
     GoToXY(1, 1);
 end;
 
+procedure renderDigit(offsetX, digit: LongInt);
+begin
+    { draws one clock symbol (digit 0..9, or -1 for the colon) at a horizontal offset inside the clock area }
+    enterArea(BORDER_TREE_VERTICAL + offsetX, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
+    displayClockNumber(digit);
+    leaveArea();
+end;
+
 procedure renderClockArea(time: LongInt);
-var 
+var
     m1, m2, s1, s2: LongInt;
 begin
     { calculate each component of the clock }
@@ -427,36 +446,17 @@ begin
     s1 := (time - (time div 60) * 60) div 10;
     s2 := (time - (time div 60) * 60) mod 10;
 
-    {display m1}
-    Window(BORDER_TREE_VERTICAL + 4, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
-    GoToXY(1, 1);
-    displayClockNumber(m1);
-    {display m2}
-    Window(BORDER_TREE_VERTICAL + 12, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
-    GoToXY(1, 1);
-    displayClockNumber(m2);
-    {display colon}
-    Window(BORDER_TREE_VERTICAL + 19, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
-    GoToXY(1, 1);
-    displayClockNumber(-1);
-    {display s1}
-    Window(BORDER_TREE_VERTICAL + 24, 4 , BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
-    GoToXY(1, 1);
-    displayClockNumber(s1);
-    {display s2}
-    Window(BORDER_TREE_VERTICAL + 32, 4, BORDER_WIDTH - 1, BORDER_CLOCK_HORIZONTAL);
-    GoToXY(1, 1);
-    displayClockNumber(s2);
-
-    {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    renderDigit(4, m1);
+    renderDigit(12, m2);
+    renderDigit(19, -1); {colon}
+    renderDigit(24, s1);
+    renderDigit(32, s2);
 end;
 
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
 begin 
-    {restrict the area to the instructions area}
-    Window(BORDER_TREE_VERTICAL + 3, BORDER_STATS_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
-    GoToXY(1, 1);
+    enterArea(BORDER_TREE_VERTICAL + 3, BORDER_STATS_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
+    ClrScr;
 
     if sessionPhase = FOCUS then
     begin 
@@ -475,19 +475,19 @@ begin
         writeln('[4] Changer d''arbre');
     end;
 
-    {reset the window to the default size}
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    leaveArea();
 end;
 
 procedure renderStatsArea();
 begin
-    Window(BORDER_TREE_VERTICAL + 3, BORDER_CLOCK_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_STATS_HORIZONTAL - 1);
+    enterArea(BORDER_TREE_VERTICAL + 3, BORDER_CLOCK_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_STATS_HORIZONTAL - 1);
+    ClrScr;
 
     writeln('Phase actuelle: ');
     writeln;
     writeln('Session: ');
 
-    Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+    leaveArea();
 end;
 
 procedure pollSessionInput(var action: TSessionAction);
