@@ -13,19 +13,13 @@ const
     PATH_TREE = 'data/trees/'; //< Chemin vers le dossier contenant les fichiers de sauvegarde des arbres.
     FILE_EXT_USER = '.user'; //< Extension des fichiers de sauvegarde des utilisateurs.
     FILE_EXT_TREE = '.dat'; //< Extension des fichiers de sauvegarde des arbres.
-
-type
-{ Tableau contenant les noms des espèces d'arbres disponibles. }
-    TStringArray = Array of String;
-
-
+    
 {   
     @abstract(Vérifie si un utilisateur existe)
     Elle cherche un fichier nommé @code(username.user) dans le dossier @code(PATH_USER).
     @param(username Le nom d'utilisateur à vérifier.)
     @returns(Un booléen indiquant si l'utilisateur existe.)
 }
-
 function userExists(username: string): Boolean;
 
 {   

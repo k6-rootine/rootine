@@ -1,9 +1,8 @@
 program main;
 
 uses 
-    FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM, crt, Utilities;
+    FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM, crt, Utilities, SysUtils;
 
-{ Returns True if a user was loaded, False if the user cancelled (empty username). }
 function handleImport(var user: TUser): Boolean;
 var
     username: String;
@@ -58,38 +57,38 @@ begin
     readkey;
 end;
 
-function selectTree(): TTree;
+function selectTree(var tree: TTree): Boolean;
 var
     availableSpecies: TStringArray;
-    i, nbSpecies: LongInt;
-begin 
-    {   1. Display available trees (by name)
-        2. Get user input for tree selection
-        3. Confirm selection
-        4. Get tree data from file and return it
-    }
+    idx: LongInt;
+    action: TTreeChoice;
+begin
     availableSpecies := getAvailableSpecies();
-    nbSpecies := getNbAvailableSpecies(availableSpecies);
+    selectTree := False;
 
-    clrscr;
-    writeln('Selectionnez un arbre parmi les suivants:');
+    repeat
+        displayTreeList(availableSpecies, idx); {idx = 0 means return}
 
-    for i := 0 to nbSpecies - 1 do
-    begin
-        writeln(i + 1, '. ', availableSpecies[i]);
-    end;
+        if idx > 0 then
+        begin
+            tree := loadTree(availableSpecies[idx - 1]);
 
-    repeat 
-        write('Entrez le numero de l''arbre que vous souhaitez selectionner: ');
-        readln(i);
-    until (i >= 1) and (i <= nbSpecies);
+            repeat
+                displayTreeChoice(availableSpecies[idx - 1], action);
+                if action = PREVIEW_TREE then
+                    displayTreeFull(tree);
+            until action <> PREVIEW_TREE;
 
-    selectTree := loadTree(availableSpecies[i - 1]);
+            if action = CONFIRM_TREE then
+                selectTree := True;
+        end;
+    until selectTree or (idx = 0);
 end;
 
-{ Restricts a value to the range [minValue, maxValue]. }
+
 function clamp(value, minValue, maxValue: LongInt): LongInt;
 begin
+    { restricts a value to the range [minValue, maxValue]. }
     if value < minValue then
         clamp := minValue
     else if value > maxValue then
@@ -190,13 +189,13 @@ begin
         end
         else if choice = START then
         begin 
-            tree := selectTree();
-            if selectMode(cycle) then
-            begin
-                startNewCycle(cycle, timer);
-                mainSessionLoop(tree, cycle, user, timer);
-                handleSessionEnd(user, cycle);
-            end;
+            if selectTree(tree) then
+                if selectMode(cycle) then
+                begin
+                    startNewCycle(cycle, timer);
+                    mainSessionLoop(tree, cycle, user, timer);
+                    handleSessionEnd(user, cycle);
+                end;
         end;
     until isLogout or isQuit;
 end;

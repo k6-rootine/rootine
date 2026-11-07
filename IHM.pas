@@ -7,7 +7,7 @@ uses
 type
     TStartChoice = (IMPORT, REGISTER, QUIT_START, NONE_START);
     TMainMenuChoice = (VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU, NONE_MAINMENU);
-    TBrowseAction = (ACTION_NONE, NEXT, PREVIOUS, SELECT);
+    TTreeChoice = (CONFIRM_TREE, PREVIEW_TREE, CANCEL_TREE, NONE_TREECHOICE);
     TSessionAction = (SESSION_ACTION_NONE, TOGGLE_PAUSE, QUIT_SESSION, CHANGE_TREE);
 
 procedure displayStartMenu(var choice: TStartChoice);
@@ -20,8 +20,8 @@ procedure displayTreeFull(tree: TTree);
 procedure displayCycleModeMenu(var mode: TMode);
 procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt);
 procedure displayPomodoroConfiguration();
-procedure renderTreePreview(tree: TTree; currentIdx, totalCnt: LongInt);
-procedure pollBrowseInput(var action: TBrowseAction);
+procedure displayTreeList(species: TStringArray; var choice: LongInt);
+procedure displayTreeChoice(speciesName: String; var action: TTreeChoice);
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
 procedure renderClockArea(time: LongInt);
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
@@ -29,9 +29,9 @@ procedure pollSessionInput(var action: TSessionAction);
 procedure displayCycleEnd(cycle: TCycle; success: Boolean);
 procedure displayOuterBorder();
 procedure displayInnerBorder();
-procedure renderStatsArea();
+procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: String; isPaused: Boolean);
 
-const 
+const
     BORDER_CHAR = '*';
     BORDER_WIDTH = 121;
     BORDER_HEIGHT = 35; { dimension w/o border is 118x33, w/ border is 120x35 }
@@ -53,6 +53,43 @@ procedure leaveArea();
 begin
     { resets the output to the whole console }
     Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
+end;
+
+function phaseLabel(phase: TPhaseSession): String;
+begin
+    { returns the French label of a session phase }
+    if phase = FOCUS then
+        phaseLabel := 'Concentration'
+    else if phase = SHORT_BREAK then
+        phaseLabel := 'Pause courte'
+    else if phase = LONG_BREAK then
+        phaseLabel := 'Pause longue'
+    else
+        phaseLabel := '';
+end;
+
+{ asks on the current row until the entry is an integer in [minValue, maxValue], showing an error line below if it is not }
+function readInteger(prompt: String; minValue, maxValue: LongInt): LongInt;
+var
+    input: String;
+    value, code, row: LongInt;
+    isValid: Boolean;
+begin
+    row := WhereY;
+    repeat
+        GoToXY(1, row);
+        clreol;
+        write(prompt);
+        readln(input);
+        Val(input, value, code);
+        isValid := (code = 0) and (value >= minValue) and (value <= maxValue);
+
+        GoToXY(1, row + 1);
+        clreol;
+        if not isValid then
+            write('Valeur invalide : entrez un entier entre ', minValue, ' et ', maxValue, '.');
+    until isValid;
+    readInteger := value;
 end;
 
 procedure displayOuterBorder();
@@ -80,31 +117,42 @@ begin
     end;
 end;
 
-procedure displayInnerBorder();
-var 
-    width, height : LongInt;
-begin 
-    {display the separation line between the tree and the clock/instructions areas}
-    GotoXY(BORDER_TREE_VERTICAL, 1);
-    for height := 2 to BORDER_HEIGHT - 1 do 
-    begin 
-        GotoXY(BORDER_TREE_VERTICAL, height);
+procedure drawVerticalSeparator();
+var
+    vertical : LongInt;
+begin
+    { draws the vertical line between the tree (left) and the right-hand panel }
+    for vertical := 2 to BORDER_HEIGHT - 1 do
+    begin
+        GotoXY(BORDER_TREE_VERTICAL, vertical);
         write(BORDER_CHAR);
     end;
+end;
+
+procedure drawHorizontalSeparator(y: LongInt);
+var
+    horizontal : LongInt;
+begin
+    { draws a horizontal line across the right-hand panel at the specified y-coordinate }
+    for horizontal := BORDER_TREE_VERTICAL + 1 to BORDER_WIDTH - 1 do
+    begin
+        GotoXY(horizontal, y);
+        write(BORDER_CHAR);
+    end;
+end;
+
+procedure displayInnerBorder();
+var
+    width : LongInt;
+begin
+    {display the separation line between the tree and the clock/stats/instructions areas}
+    drawVerticalSeparator();
 
     {display the separation line between the clock and the stats areas}
-    GotoXY(BORDER_TREE_VERTICAL + 1, BORDER_CLOCK_HORIZONTAL);
-    for width := BORDER_TREE_VERTICAL + 1 to BORDER_WIDTH - 1 do
-    begin
-        write(BORDER_CHAR);
-    end;
-
+    drawHorizontalSeparator(BORDER_CLOCK_HORIZONTAL);
+    
     {display the separation line between the stats and instructions areas}
-    GotoXY(BORDER_TREE_VERTICAL + 1, BORDER_STATS_HORIZONTAL);
-    for width := BORDER_TREE_VERTICAL + 1 to BORDER_WIDTH - 1 do
-    begin
-        write(BORDER_CHAR);
-    end;
+    drawHorizontalSeparator(BORDER_STATS_HORIZONTAL);
 end;
 
 procedure displayStartMenu(var choice: TStartChoice);
@@ -293,19 +341,25 @@ end;
 
 procedure displayProfile(user: TUser);
 var
-    horizontalOffset, verticalOffset: LongInt;
+    horizontalOffset, verticalOffset, i, totalTrees: LongInt;
     joinDate: TDate;
     forest: TForest;
-begin 
+begin
     {variables}
     horizontalOffset := 30;
     verticalOffset := 18;
     joinDate := getJoinDate(user);
     forest := getForest(user);
 
+    { calculate the total number of trees grown}
+    totalTrees := 0;
+    for i := 1 to getNbSpecies(forest) do
+        totalTrees := totalTrees + getNbTreesGrown(forest, i);
+
     {limit the display area}
     enterArea(horizontalOffset, verticalOffset, horizontalOffset + 60, verticalOffset + 20);
 
+    {display all information}
     writeln('Nom d''utilisateur : ', getUsername(user));
     writeln('Prenom : ', getName(user));
     writeln('Date de creation du compte : ', Format('%.2d/%.2d/%4d', [getDay(joinDate), getMonth(joinDate), getYear(joinDate)]));
@@ -314,8 +368,7 @@ begin
     writeln('Nombre de sessions completees : ', getNbSessionsDone(user));
     writeln('Temps total de concentration : ', Format('%.2d:%.2d:%.2d', [getTotalFocusTime(user) div 3600, getTotalFocusTime(user) div 60 mod 60, getTotalFocusTime(user) mod 60]));
     writeln('Nombre d''especes differentes ayant pousse : ', getNbSpecies(forest));
-    {writeln('Nombre total d''arbres ayant poussé : ', getNbTreesGrown(user));} 
-    {the function returns for only one species so this needs to be worked on}
+    writeln('Nombre total d''arbres ayant pousse : ', totalTrees);
 
     leaveArea();
 end; 
@@ -326,8 +379,23 @@ begin
 end;
 
 procedure displayTreeFull(tree: TTree);
-begin 
+begin
+    clrscr;
+    displayOuterBorder();
+    drawVerticalSeparator();
+    {the tree is shown in its final growth phase}
+    renderTreeArea(tree, getNbPhases(tree));
 
+    enterArea(BORDER_TREE_VERTICAL + 3, 3, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
+    writeln(UpperCase(getSpeciesName(tree)));
+    writeln(StringOfChar('-', Length(getSpeciesName(tree))));
+    writeln('Apercu de l''etat final');
+    writeln;
+    writeln(getTreeDescription(tree));
+    GoToXY(1, BORDER_HEIGHT - 4);
+    write('Appuyez sur une touche pour revenir...');
+    leaveArea();
+    readkey;
 end;
 
 procedure displayCycleModeMenu(var mode: TMode);
@@ -393,14 +461,72 @@ begin
     readkey;
 end;
 
-procedure renderTreePreview(tree: TTree; currentIdx, totalCnt: LongInt);
-begin 
+procedure displayTreeList(species: TStringArray; var choice: LongInt);
+const
+    ROWS_PER_COLUMN = 7;
+    COLUMN_WIDTH = 30;
+var
+    i, nbSpecies: LongInt;
+    heading: String;
+begin
+    nbSpecies := getNbAvailableSpecies(species);
+    heading := 'Selectionnez un arbre a faire pousser :';
 
+    clrscr;
+    RootineLogo(30, 5);
+    displayOuterBorder();
+    {center the heading horizontally}
+    GoToXY((BORDER_WIDTH - Length(heading)) div 2, 16);
+    write(heading);
+
+    {species are listed in columns of ROWS_PER_COLUMN entries}
+    enterArea(30, 18, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+    for i := 0 to nbSpecies - 1 do
+    begin
+        GoToXY(1 + (i div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + (i mod ROWS_PER_COLUMN));
+        write('[', i + 1, ']   ', species[i]);
+    end;
+    GoToXY(1, ROWS_PER_COLUMN + 2);
+    write('[0]   Retour');
+
+    GoToXY(1, ROWS_PER_COLUMN + 4);
+    choice := readInteger('Votre choix : ', 0, nbSpecies);
+    leaveArea();
 end;
 
-procedure pollBrowseInput(var action: TBrowseAction);
-begin 
+procedure displayTreeChoice(speciesName: String; var action: TTreeChoice);
+var
+    key: Char;
+    heading: String;
+begin
+    heading := 'Vous avez choisi : ' + speciesName;
 
+    clrscr;
+    RootineLogo(30, 5);
+    displayOuterBorder();
+    {center the heading horizontally}
+    GoToXY((BORDER_WIDTH - Length(heading)) div 2, 16);
+    write(heading);
+
+    enterArea(40, 18, 80, BORDER_HEIGHT - 2);
+    writeln('[1]   Confirmer ce choix');
+    writeln;
+    writeln('[2]   Voir un apercu de l''arbre');
+    writeln;
+    writeln('[3]   Choisir un autre arbre');
+    leaveArea();
+
+    action := NONE_TREECHOICE;
+    repeat
+        key := ReadKey;
+
+        if (key = '1') then
+            action := CONFIRM_TREE
+        else if (key = '2') then
+            action := PREVIEW_TREE
+        else if (key = '3') then
+            action := CANCEL_TREE;
+    until action <> NONE_TREECHOICE;
 end;
 
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
@@ -475,14 +601,19 @@ begin
     leaveArea();
 end;
 
-procedure renderStatsArea();
+procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: String; isPaused: Boolean);
 begin
     enterArea(BORDER_TREE_VERTICAL + 3, BORDER_CLOCK_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_STATS_HORIZONTAL - 1);
     ClrScr;
 
-    writeln('Phase actuelle: ');
-    writeln;
-    writeln('Session: ');
+    writeln('Phase : ', phaseLabel(phase));
+    writeln('Session : ', session);
+    writeln('Arbre : ', speciesName);
+    {write, not writeln: a newline on the last row would scroll the area}
+    if isPaused then
+        write('Etat : En pause')
+    else
+        write('Etat : En cours');
 
     leaveArea();
 end;
