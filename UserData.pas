@@ -242,7 +242,7 @@ implementation
         user : TUser;
         dd, mm, yy : Word;
     begin
-        DecodeDate(Date, yy, mm, dd);
+        DecodeDate(date, yy, mm, dd);
 
         user.name := '';
         user.username := '';

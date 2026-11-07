@@ -18,8 +18,8 @@ procedure displayProfile(user: TUser);
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
 procedure displayTreeFull(tree: TTree);
 procedure displayCycleModeMenu(var mode: TMode);
-procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt);
-procedure displayPomodoroConfiguration();
+procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt; var confirmed: Boolean);
+procedure displayPomodoroConfiguration(focus, shortBreak, longBreak, nbSessions: LongInt; var confirmed: Boolean);
 procedure displayTreeList(species: TStringArray; var choice: LongInt);
 procedure displayTreeChoice(speciesName: String; var action: TTreeChoice);
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
@@ -29,6 +29,8 @@ procedure pollSessionInput(sessionPhase: TPhaseSession; var action: TSessionActi
 procedure displayCycleEnd(cycle: TCycle; success: Boolean);
 procedure displayOuterBorder();
 procedure displayInnerBorder();
+procedure drawScreenHeader(heading: String);
+procedure initialiseScreen();
 procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: String; isPaused: Boolean);
 
 const
@@ -46,6 +48,7 @@ const
     MENU_X = 40; { left column of the menus and choices }
     LIST_X = 30; { left column of the lists, login and profile }
     FORM_X = 15; { left column of the register form }
+    DEFAULT_COLOR = crt.White; { colour of all the text; any other colour is local and must restore this one }
 
 implementation
 
@@ -55,7 +58,6 @@ begin
     Window(x1, y1, x2, y2);
     GoToXY(1, 1);
 end;
-
 
 procedure leaveArea();
 begin
@@ -76,7 +78,6 @@ begin
         phaseLabel := '';
 end;
 
-{ asks on the current row until the entry is an integer in [minValue, maxValue], showing an error line below if it is not }
 function readInteger(prompt: String; minValue, maxValue: LongInt): LongInt;
 var
     input: String;
@@ -89,7 +90,7 @@ begin
         clreol;
         write(prompt);
         readln(input);
-        Val(input, value, code);
+        val(input, value, code);
         isValid := (code = 0) and (value >= minValue) and (value <= maxValue);
 
         GoToXY(1, row + 1);
@@ -98,6 +99,54 @@ begin
             write('Valeur invalide : entrez un entier entre ', minValue, ' et ', maxValue, '.');
     until isValid;
     readInteger := value;
+end;
+
+{ writes text in the current window, going to the next line before a word that would not fit; width is the number of columns of the window }
+procedure writeWrapped(text: String; width: LongInt);
+var
+    w: String;
+    lineLength, spacePos: LongInt;
+begin
+    lineLength := 0;
+    text := text + ' ';
+
+    while length(text) > 0 do
+    begin
+        spacePos := pos(' ', text);
+        w := copy(text, 1, spacePos - 1);
+        delete(text, 1, spacePos);
+
+        if w <> '' then
+        begin
+            {a word longer than a whole line is cut}
+            while length(w) >= width do
+            begin
+                if lineLength > 0 then
+                begin
+                    writeln;
+                    lineLength := 0;
+                end;
+                writeln(copy(w, 1, width - 1));
+                delete(w, 1, width - 1);
+            end;
+
+            {lines stay one character shorter than the window so that a full line does not wrap by itself}
+            if (lineLength > 0) and (lineLength + 1 + length(w) > width - 1) then
+            begin
+                writeln;
+                lineLength := 0;
+            end;
+
+            if lineLength > 0 then
+            begin
+                write(' ');
+                lineLength := lineLength + 1;
+            end;
+            write(w);
+            lineLength := lineLength + length(w);
+        end;
+    end;
+    writeln;
 end;
 
 procedure displayOuterBorder();
@@ -132,7 +181,7 @@ begin
     { draws the vertical line between the tree (left) and the right-hand panel }
     for vertical := 2 to BORDER_HEIGHT - 1 do
     begin
-        GotoXY(BORDER_TREE_VERTICAL, vertical);
+        GoToXY(BORDER_TREE_VERTICAL, vertical);
         write(BORDER_CHAR);
     end;
 end;
@@ -144,7 +193,7 @@ begin
     { draws a horizontal line across the right-hand panel at the specified y-coordinate }
     for horizontal := BORDER_TREE_VERTICAL + 1 to BORDER_WIDTH - 1 do
     begin
-        GotoXY(horizontal, y);
+        GoToXY(horizontal, y);
         write(BORDER_CHAR);
     end;
 end;
@@ -161,11 +210,27 @@ begin
     drawHorizontalSeparator(BORDER_STATS_HORIZONTAL);
 end;
 
+procedure drawScreenHeader(heading: String);
+begin
+    { clears the screen and draws the logo, the outer border and a centred heading (the heading may be empty) }
+    clrscr;
+    RootineLogo(LOGO_X, LOGO_Y);
+    displayOuterBorder();
+    GoToXY((BORDER_WIDTH - length(heading)) div 2, HEADING_ROW);
+    write(heading);
+end;
+
+{ sets the default colour of the program and clears the screen; to be called once at startup }
+procedure initialiseScreen();
+begin
+    TextColor(DEFAULT_COLOR);
+    clrscr;
+end;
+
 procedure displayStartMenu(var choice: TStartChoice);
 var 
     key: Char;
 begin 
-    
     {limit the input area to a specific window size to avoid text overflow}
     enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, CONTENT_ROW + 20);
     writeln('Bienvenue ! Veuillez choisir une option :');
@@ -181,7 +246,7 @@ begin
 
     choice := NONE_START;
     repeat
-        key := ReadKey;
+        key := readkey;
 
         if (key = '1') then
             choice := IMPORT
@@ -203,7 +268,7 @@ begin
         welcomeMessage := 'Salut, ' + getName(user) + ' ! Pret a commencer une session de travail ?';
     
     {center the welcome message horizontally}
-    gotoXY((BORDER_WIDTH - Length(welcomeMessage)) div 2, HEADING_ROW);
+    GoToXY((BORDER_WIDTH - length(welcomeMessage)) div 2, HEADING_ROW);
     writeln(welcomeMessage);
     writeln;
 
@@ -226,7 +291,7 @@ begin
 
     choice := NONE_MAINMENU;
     repeat
-        key := ReadKey;
+        key := readkey;
 
         if (key = '1') then
             choice := START
@@ -243,7 +308,6 @@ end;
 
 procedure displayLogin(var username: String);
 begin 
-
     {limit the input area to a specific window size to avoid text overflow}
     enterArea(LIST_X, CONTENT_ROW, LIST_X + 50, CONTENT_ROW + 20);
 
@@ -269,7 +333,6 @@ end;
 
 procedure displayRegister(var firstname, username, description: String);
 begin 
-
     {limit the input area to a specific window size to avoid text overflow}
     enterArea(FORM_X, CONTENT_ROW, FORM_X + 90, CONTENT_ROW + 20);
 
@@ -281,14 +344,14 @@ begin
     {enter full name, if invalid, ask again}
     writeln;
     repeat 
-        GoToXY(1, 6);
+        GoToXY(1, 7);
         clreol;
         write('Veuillez entrer votre prenom : ');
         readln(firstname);
         
         {remove previous error messages and clear the line for username input}
         writeln;
-        GoToXY(1, 7);
+        GoToXY(1, 8);
         clreol;
 
         {display error message if full name is invalid}
@@ -301,19 +364,19 @@ begin
     {enter username. if already exists or empty or invalid, ask again}
     repeat 
         writeln;
-        GoToXY(1, 8);
+        GoToXY(1, 9);
         clreol;
         write('Veuillez entrer votre nom d''utilisateur : ');
         readln(username);
         username := lowercase(username);
         
-        GoToXY(1, 8);
+        GoToXY(1, 10);
         clreol;
         write('Veuillez entrer votre nom d''utilisateur : ', username);
 
         {remove previous error messages and clear the line for description input}
         writeln;
-        GoToXY(1, 9);
+        GoToXY(1, 11);
         clreol; 
 
         {display error messages if username is invalid, empty, or already exists}
@@ -355,18 +418,17 @@ begin
     {display all information}
     writeln('Nom d''utilisateur : ', getUsername(user));
     writeln('Prenom : ', getName(user));
-    writeln('Date de creation du compte : ', Format('%.2d/%.2d/%4d', [getDay(joinDate), getMonth(joinDate), getYear(joinDate)]));
-    writeln('Description : ', getUserDescription(user));
+    writeln('Date de creation du compte : ', format('%.2d/%.2d/%4d', [getDay(joinDate), getMonth(joinDate), getYear(joinDate)]));
+    writeWrapped('Description : ' + getUserDescription(user), 61);
     writeln('Nombre de cycles completes : ', getNbCyclesDone(user));
     writeln('Nombre de sessions completees : ', getNbSessionsDone(user));
-    writeln('Temps total de concentration : ', Format('%.2d:%.2d:%.2d', [getTotalFocusTime(user) div 3600, getTotalFocusTime(user) div 60 mod 60, getTotalFocusTime(user) mod 60]));
+    writeln('Temps total de concentration : ', format('%.2d:%.2d:%.2d', [getTotalFocusTime(user) div 3600, getTotalFocusTime(user) div 60 mod 60, getTotalFocusTime(user) mod 60]));
     writeln('Nombre d''especes differentes ayant pousse : ', getNbSpecies(forest));
     writeln('Nombre total d''arbres ayant pousse : ', totalTrees);
 
     leaveArea();
 end; 
 
-{ idx is the number of the chosen species (1..N), or 0 for "Retour" or an empty forest }
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
 const
     ROWS_PER_COLUMN = 7;
@@ -377,15 +439,14 @@ var
 begin
     nbSpecies := getNbSpecies(forest);
 
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
+    if nbSpecies = 0 then
+        heading := 'Votre foret est vide pour le moment.'
+    else
+        heading := 'Votre foret : choisissez une espece a afficher :';
+    drawScreenHeader(heading);
 
     if nbSpecies = 0 then
     begin
-        heading := 'Votre foret est vide pour le moment.';
-        GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
-        write(heading);
         enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
         writeln('Terminez une session de concentration pour faire pousser votre premier arbre.');
         writeln;
@@ -396,10 +457,6 @@ begin
     end
     else
     begin
-        heading := 'Votre foret : choisissez une espece a afficher :';
-        GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
-        write(heading);
-
         {species are listed in columns of ROWS_PER_COLUMN entries, with their tree count}
         enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
         for i := 1 to nbSpecies do
@@ -421,36 +478,46 @@ begin
     clrscr;
     displayOuterBorder();
     drawVerticalSeparator();
+    
     {the tree is shown in its final growth phase}
     renderTreeArea(tree, getNbPhases(tree));
 
-    enterArea(BORDER_TREE_VERTICAL + 3, 3, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
+    enterArea(BORDER_TREE_VERTICAL + 3, 3, BORDER_WIDTH - 4, BORDER_HEIGHT - 1);
     writeln(uppercase(getSpeciesName(tree)));
     writeln('Apercu de l''etat final');
     writeln;
-    writeln(getTreeDescription(tree));
-    GoToXY(1, BORDER_HEIGHT - 4);
-    write('Appuyez sur une touche pour revenir...');
+    writeWrapped(getTreeDescription(tree), BORDER_WIDTH - 1 - (BORDER_TREE_VERTICAL + 3) + 1);
+    writeln;
+    writeln;
+    writeln('Appuyez sur une touche pour revenir');
+
     leaveArea();
     readkey;
 end;
 
 procedure displayCycleModeMenu(var mode: TMode);
-var 
+var
     key: Char;
     isReturn: Boolean;
+    heading: String;
 begin
     isReturn := False;
     mode := NONE_MODE;
+    heading := 'Veuillez choisir un mode de cycle :';
+
+    drawScreenHeader(heading);
+
+    enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, CONTENT_ROW + 20);
+    writeln('[1]   Mode Pomodoro');
+    writeln;
+    writeln('[2]   Mode Personnalise');
+    writeln;
+    write('[3]   Retour');
+    leaveArea();
 
     repeat
-        clrscr;
-        writeln('Veuillez choisir un mode de cycle :');
-        writeln('[1]   Mode Pomodoro ');
-        writeln('[2]   Mode Personnalise');
-        writeln('[3]   Retour');
+        key := readkey;
 
-        key := ReadKey;
         if (key = '1') then
             mode := POMODORO
         else if (key = '2') then
@@ -460,42 +527,84 @@ begin
     until (mode in [POMODORO, CUSTOM]) or isReturn;
 end;
 
-procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt);
-begin 
-    clrscr;
-    writeln('Veuillez entrer les parametres de configuration du mode personnalise :');
-    writeln('Attention : La duree maximale de chaque parametre est de 90 minutes.');
-    writeln('Duree de concentration (en minutes) : ');
-    read(focusDuration);
-    writeln('Duree de pause courte (en minutes) : ');
-    read(shortBreakDuration);
-    writeln('Duree de pause longue (en minutes) : ');
-    read(longBreakDuration);
-    writeln('Nombre de sessions avant une pause longue : ');
-    read(nbSessionsBeforeLongBreak);
-
-    clrscr;
-    writeln('Ci-dessous la configuration que vous avez choisie :');
-    writeln('Duree de concentration : ', focusDuration, ' minutes');
-    writeln('Duree de pause courte : ', shortBreakDuration, ' minutes');
-    writeln('Duree de pause longue : ', longBreakDuration, ' minutes');
-    writeln('Nombre de sessions avant une pause longue : ', nbSessionsBeforeLongBreak);
-
-    writeln('Appuyez sur une touche pour continuer...');
-    readkey;
+procedure printConfiguration(focus, shortBreak, longBreak, nbSessions: LongInt);
+begin
+    writeln('Duree de concentration : ', focus, ' minutes');
+    writeln;
+    writeln('Duree de pause courte : ', shortBreak, ' minutes');
+    writeln;
+    writeln('Duree de pause longue : ', longBreak, ' minutes');
+    writeln;
+    writeln('Sessions avant une pause longue : ', nbSessions);
 end;
 
-procedure displayPomodoroConfiguration();
-begin 
-    clrscr;
-    writeln('Configuration du mode Pomodoro :');
-    writeln('Duree de concentration : 25 minutes');
-    writeln('Duree de pause courte : 5 minutes');
-    writeln('Duree de pause longue : 15 minutes');
-    writeln('Nombre de sessions avant une pause longue : 4');
+procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt; var confirmed: Boolean);
+const
+    MAX_MINUTES = 90;
+    MAX_NB_SESSIONS = 99;
+var
+    key: Char;
+    heading: String;
+begin
+    repeat
+        {form: one field every two rows, the row below each field is used by readInteger for its error message}
+        heading := 'Mode personnalise : entrez vos parametres';
+        drawScreenHeader(heading);
 
-    writeln('Appuyez sur une touche pour continuer...');
-    readkey;
+        enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+        GoToXY(1, 1);
+        focusDuration := readInteger('Duree de concentration (1-' + inttostr(MAX_MINUTES) + ' minutes) : ', 1, MAX_MINUTES);
+        GoToXY(1, 3);
+        shortBreakDuration := readInteger('Duree de pause courte (1-' + inttostr(MAX_MINUTES) + ' minutes) : ', 1, MAX_MINUTES);
+        GoToXY(1, 5);
+        longBreakDuration := readInteger('Duree de pause longue (1-' + inttostr(MAX_MINUTES) + ' minutes) : ', 1, MAX_MINUTES);
+        GoToXY(1, 7);
+        nbSessionsBeforeLongBreak := readInteger('Sessions avant une pause longue (1-' + inttostr(MAX_NB_SESSIONS) + ') : ', 1, MAX_NB_SESSIONS);
+        leaveArea();
+
+        {summary and choice}
+        heading := 'Votre configuration :';
+        drawScreenHeader(heading);
+
+        enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+        printConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
+        writeln;
+        writeln('[1]   Confirmer et demarrer');
+        writeln;
+        writeln('[2]   Modifier les parametres');
+        writeln;
+        write('[3]   Annuler');
+        leaveArea();
+
+        repeat
+            key := readkey;
+        until (key = '1') or (key = '2') or (key = '3');
+    until key <> '2';
+
+    confirmed := (key = '1');
+end;
+
+procedure displayPomodoroConfiguration(focus, shortBreak, longBreak, nbSessions: LongInt; var confirmed: Boolean);
+var
+    key: Char;
+    heading: String;
+begin
+    heading := 'Mode Pomodoro';
+    drawScreenHeader(heading);
+
+    enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
+    printConfiguration(focus, shortBreak, longBreak, nbSessions);
+    writeln;
+    writeln('[1]   Confirmer et demarrer');
+    writeln;
+    write('[2]   Annuler');
+    leaveArea();
+
+    repeat
+        key := readkey;
+    until (key = '1') or (key = '2');
+
+    confirmed := (key = '1');
 end;
 
 procedure displayTreeList(species: TStringArray; var choice: LongInt);
@@ -509,19 +618,17 @@ begin
     nbSpecies := getNbAvailableSpecies(species);
     heading := 'Selectionnez un arbre a faire pousser :';
 
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
-    {center the heading horizontally}
-    GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
-    write(heading);
+    drawScreenHeader(heading);
 
     {species are listed in columns of ROWS_PER_COLUMN entries}
     enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
     for i := 0 to nbSpecies - 1 do
     begin
         GoToXY(1 + (i div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + (i mod ROWS_PER_COLUMN));
-        write('[', i + 1, ']   ', species[i]);
+        if (i < 9) then
+            write('[', i + 1, ']   ', species[i])
+        else
+            write('[', i + 1, ']  ', species[i]);
     end;
     GoToXY(1, ROWS_PER_COLUMN + 2);
     write('[0]   Retour');
@@ -538,12 +645,7 @@ var
 begin
     heading := 'Vous avez choisi : ' + speciesName;
 
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
-    {center the heading horizontally}
-    GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
-    write(heading);
+    drawScreenHeader(heading);
 
     enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, BORDER_HEIGHT - 2);
     writeln('[1]   Confirmer ce choix');
@@ -555,7 +657,7 @@ begin
 
     action := NONE_TREECHOICE;
     repeat
-        key := ReadKey;
+        key := readkey;
 
         if (key = '1') then
             action := CONFIRM_TREE
@@ -584,7 +686,7 @@ begin
         writeln;
     end;
 
-    TextColor(White);
+    TextColor(DEFAULT_COLOR);
     GoToXY(1, 1);
 end;
 
@@ -616,7 +718,7 @@ end;
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
 begin 
     enterArea(BORDER_TREE_VERTICAL + 3, BORDER_STATS_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
-    ClrScr;
+    clrscr;
 
     if sessionPhase = FOCUS then
     begin 
@@ -641,7 +743,7 @@ end;
 procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: String; isPaused: Boolean);
 begin
     enterArea(BORDER_TREE_VERTICAL + 3, BORDER_CLOCK_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_STATS_HORIZONTAL - 1);
-    ClrScr;
+    clrscr;
 
     writeln('Phase : ', phaseLabel(phase));
     writeln('Session : ', session);
@@ -661,12 +763,12 @@ var
 begin
     action := NONE_SA;
 
-    if KeyPressed then
+    if keypressed then
     begin
-        key := ReadKey;
+        key := readkey;
 
         if key = #0 then
-            ReadKey {special keys send a second code that must be skipped}
+            readkey {special keys send a second code that must be skipped}
         else if key = '1' then
             action := TOGGLE_PAUSE
         else if key = '2' then
@@ -700,12 +802,7 @@ begin
     else
         modeName := 'Personnalise';
 
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
-    {center the heading horizontally}
-    GoToXY((BORDER_WIDTH - Length(heading)) div 2, HEADING_ROW);
-    write(heading);
+    drawScreenHeader(heading);
 
     enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, BORDER_HEIGHT - 2);
     writeln('Mode : ', modeName);

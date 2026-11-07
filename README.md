@@ -12,3 +12,5 @@
 - Introduced private helpers (enterArea, leaveArea,...)
 - Remove unnecessary functions/procedures that we thought was useful (askConfirmation, displayMessage, displayError, etc)
 - Removal of TStringArray in FileManager since SysUtils already has that
+- Introduced booleans in some functions/procedures to report whether the user confirmed or cancelled 
+- Some IHMs call functions/procedures that are not initially planned (displayLogin, displayRegister, etc)

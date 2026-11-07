@@ -3,13 +3,18 @@ program main;
 uses 
     FileManager, CycleData, TimerManager, TreeData, UserData, WindowsManager, IHM, crt, Utilities, SysUtils;
 
+const
+    {Pomodoro settings: durations in minutes}
+    POMODORO_FOCUS = 25;
+    POMODORO_SHORT_BREAK = 5;
+    POMODORO_LONG_BREAK = 15;
+    POMODORO_NB_SESSIONS = 4;
+
 function handleImport(var user: TUser): Boolean;
 var
     username: String;
 begin
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
+    drawScreenHeader('');
     displayLogin(username);
 
     if username <> '' then
@@ -25,9 +30,7 @@ procedure handleRegistration(var user: TUser);
 var
     fullname, username, description: String;
 begin
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
+    drawScreenHeader('');
     displayRegister(fullname, username, description);
     setName(user, fullname);
     setUsername(user, username);
@@ -50,9 +53,7 @@ end;
 
 procedure handleViewProfile(user: TUser);
 begin
-    clrscr;
-    RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
+    drawScreenHeader('');
     displayProfile(user);
     readkey;
 end;
@@ -100,28 +101,30 @@ end;
 function selectMode(var cycle: TCycle): Boolean;
 var
     mode: TMode;
+    confirmed: Boolean;
     focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt;
 begin
-    displayCycleModeMenu(mode);
-    selectMode := True;
+    {the mode menu is shown again if the user cancels a configuration}
+    repeat
+        displayCycleModeMenu(mode);
+        confirmed := False;
 
-    if mode = POMODORO then
-    begin
-        displayPomodoroConfiguration();
-        cycle := initialiseCycle(POMODORO, 25 * 60, 5 * 60, 15 * 60, 4);
-    end
-    else if mode = CUSTOM then
-    begin
-        displayCustomConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
-        { durations are entered in minutes (1..90) and stored in seconds }
-        focusDuration := clamp(focusDuration, 1, 90) * 60;
-        shortBreakDuration := clamp(shortBreakDuration, 1, 90) * 60;
-        longBreakDuration := clamp(longBreakDuration, 1, 90) * 60;
-        nbSessionsBeforeLongBreak := clamp(nbSessionsBeforeLongBreak, 1, 99);
-        cycle := initialiseCycle(CUSTOM, focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
-    end
-    else
-        selectMode := False;
+        if mode = POMODORO then
+        begin
+            displayPomodoroConfiguration(POMODORO_FOCUS, POMODORO_SHORT_BREAK, POMODORO_LONG_BREAK, POMODORO_NB_SESSIONS, confirmed);
+            if confirmed then
+                cycle := initialiseCycle(POMODORO, POMODORO_FOCUS * 60, POMODORO_SHORT_BREAK * 60, POMODORO_LONG_BREAK * 60, POMODORO_NB_SESSIONS);
+        end
+        else if mode = CUSTOM then
+        begin
+            displayCustomConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak, confirmed);
+            { durations are entered in minutes and stored in seconds }
+            if confirmed then
+                cycle := initialiseCycle(CUSTOM, focusDuration * 60, shortBreakDuration * 60, longBreakDuration * 60, nbSessionsBeforeLongBreak);
+        end;
+    until confirmed or (mode = NONE_MODE);
+
+    selectMode := confirmed;
 end;
 
 procedure startNewCycle(var cycle: TCycle; var timer: TTimer);
@@ -164,9 +167,7 @@ begin
     isLogout := False;
 
     repeat 
-        clrscr;
-        RootineLogo(LOGO_X, LOGO_Y);
-        displayOuterBorder();
+        drawScreenHeader('');
         displayMainMenu(choice, user);
 
         if choice = VIEW_PROFILE then
@@ -205,13 +206,12 @@ var
     isQuit, isLoggedIn: Boolean;
     choice: TStartChoice;
 begin
+    initialiseScreen();
     isQuit := False;
 
     repeat
         isLoggedIn := False;
-        clrscr;
-        RootineLogo(LOGO_X, LOGO_Y);
-        displayOuterBorder();
+        drawScreenHeader('');
         displayStartMenu(choice);
 
         if choice = IMPORT then

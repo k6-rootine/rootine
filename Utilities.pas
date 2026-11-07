@@ -65,13 +65,13 @@ function isValidUsername(username: String): Boolean;
 var 
     i: LongInt;
 begin 
-    if (Length(username) < 1) or (Length(username) > 30) then
+    if (length(username) < 1) or (length(username) > 30) then
     begin
         isValidUsername := False;
         Exit;
     end;
 
-    for i := 1 to Length(username) do
+    for i := 1 to length(username) do
     begin
         if not (username[i] in ALLOWED_USERNAME_CHARS) then
         begin
@@ -86,13 +86,7 @@ function isValidName(fullname: String): Boolean;
 var 
     i: LongInt;
 begin
-    if Length(fullname) < 1 then
-    begin
-        isValidName := False;
-        Exit;
-    end;
-
-    for i := 1 to Length(fullname) do
+    for i := 1 to length(fullname) do
     begin
         if not (fullname[i] in ALLOWED_FULLNAME_CHARS) then
         begin
