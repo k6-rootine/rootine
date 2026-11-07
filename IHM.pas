@@ -196,6 +196,7 @@ begin
         clreol;
         write('Veuillez entrer votre nom d''utilisateur : ');
         readln(username);
+        username := lowercase(username);
 
         if not userExists(username) and (username <> '') then
         begin
@@ -221,9 +222,9 @@ begin
 
     {display instructions}
     writeln('Attention ! ');
-    writeln('- Les characteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.');
+    writeln('- Les caracteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.');
     writeln('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.');
-    writeln('- Le nom d''utilisateur doit etre unique et entre 1 et 20 caracteres.');
+    writeln('- Le nom d''utilisateur doit etre unique et entre 1 et 30 caracteres.');
     {enter full name, if invalid, ask again}
     writeln;
     repeat 
@@ -251,7 +252,12 @@ begin
         clreol;
         write('Veuillez entrer votre nom d''utilisateur : ');
         readln(username);
+        username := lowercase(username);
         
+        GoToXY(1, 8);
+        clreol;
+        write('Veuillez entrer votre nom d''utilisateur : ', username);
+
         {remove previous error messages and clear the line for description input}
         writeln;
         GoToXY(1, 9);

@@ -120,13 +120,17 @@ begin
 
 end;
 
-procedure mainSessionLoop(var tree: TTree; var cycle: TCycle; var user: TUser; timer: TTimer);
-begin 
-
-end;
-
 procedure handleSessionEnd(var user: TUser; cycle: TCycle);
 begin 
+    
+end;
+
+procedure mainSessionLoop(var tree: TTree; var cycle: TCycle; var user: TUser; timer: TTimer);
+begin 
+    clrscr;
+    displayOuterBorder();
+    displayInnerBorder();
+
 
 end;
 
@@ -168,6 +172,7 @@ begin
         begin 
             tree := selectTree();
             cycle := selectMode();
+
             startNewCycle(cycle, timer);
             mainSessionLoop(tree, cycle, user, timer);
             handleSessionEnd(user, cycle);

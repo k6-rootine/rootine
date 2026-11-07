@@ -109,8 +109,10 @@ implementation
             getCurrentPhaseDuration := cycle.focusDuration
         else if getCurrentPhase(cycle) = SHORT_BREAK then
             getCurrentPhaseDuration := cycle.shortBreakDuration
-        else 
-            getCurrentPhaseDuration := cycle.longBreakDuration;
+        else if getCurrentPhase(cycle) = LONG_BREAK then
+            getCurrentPhaseDuration := cycle.longBreakDuration
+        else
+            getCurrentPhaseDuration := 0;
     end;
 
     function getState(cycle: Tcycle): TState;

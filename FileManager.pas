@@ -8,7 +8,6 @@ interface
 uses UserData, TreeData, SysUtils;
 
 const
-    MAX_SPECIES = 100; //< Nombre maximum théorique d'espèces d'arbres.
     PATH_DATA = 'data/'; //< Chemin vers le dossier contenant les données.
     PATH_USER = 'data/users/'; //< Chemin vers le dossier contenant les fichiers de sauvegarde des utilisateurs.
     PATH_TREE = 'data/trees/'; //< Chemin vers le dossier contenant les fichiers de sauvegarde des arbres.
@@ -97,10 +96,15 @@ var
     f: File of TUser;
     user: TUser;
 begin
-    assign(f, PATH_USER + username + FILE_EXT_USER);
-    reset(f);
-    read(f, user);
-    close(f);
+    user := initialiseUser();
+
+    if userExists(username) then
+    begin
+        assign(f, PATH_USER + username + FILE_EXT_USER);
+        reset(f);
+        read(f, user);
+        close(f);
+    end;
     
     loadUser := user;
 end;

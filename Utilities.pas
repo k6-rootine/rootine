@@ -11,9 +11,9 @@ function isValidName(fullname: String): Boolean;
 
 implementation
 const 
-    ALLOWED_USERNAME_CHARS = ['a'..'z', 'A'..'Z', '0'..'9'];
+    ALLOWED_USERNAME_CHARS = ['a'..'z', '0'..'9'];
     ALLOWED_FULLNAME_CHARS = ['a'..'z', 'A'..'Z', ' ', '-', ''''];
-    BORDER_WIDTH = 120;
+    BORDER_WIDTH = 121;
     BORDER_HEIGHT = 35;
     NUMBERS : Array[0..9, 1..7] of String = (
         ('######', '##  ##', '##  ##', '##  ##', '##  ##', '##  ##', '######'),   { 0 }
@@ -65,7 +65,7 @@ function isValidUsername(username: String): Boolean;
 var 
     i: LongInt;
 begin 
-    if (Length(username) < 1) or (Length(username) > 20) then
+    if (Length(username) < 1) or (Length(username) > 30) then
     begin
         isValidUsername := False;
         Exit;
@@ -85,7 +85,13 @@ end;
 function isValidName(fullname: String): Boolean;
 var 
     i: LongInt;
-begin 
+begin
+    if Length(fullname) < 1 then
+    begin
+        isValidName := False;
+        Exit;
+    end;
+
     for i := 1 to Length(fullname) do
     begin
         if not (fullname[i] in ALLOWED_FULLNAME_CHARS) then
