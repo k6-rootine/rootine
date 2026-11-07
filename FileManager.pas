@@ -36,7 +36,7 @@ function userExists(username: string): Boolean;
 procedure saveUser(user: TUser);
 
 {   
-    @abstract(Charge un utilisateur depuis son fichier
+    @abstract(Charge un utilisateur depuis son fichier)
     Le pseudo doit être un nom de fichier valide, sans chemin. Retourne un @code(TUser) vide si l'utilisateur n'existe pas.
     @param(username Le nom d'utilisateur à charger.)
     @returns(Un @code(TUser) actualisé.)
@@ -53,12 +53,11 @@ function loadUser(username: string): TUser;
 function treeExists(speciesName: string): Boolean;
 
 {   
-    @abstract(Charge une espèce d'arbre depuis son fichier
+    @abstract(Charge une espèce d'arbre depuis son fichier)
     Le nom de l'espèce doit être un nom de fichier valide, sans chemin. Retourne un @code(TTree) vide si l'espèce n'existe pas.
     @param(speciesName Le nom de l'espèce à charger.)
     @returns(Un @code(TTree) actualisé.)
 }
-
 function loadTree(speciesName: string): TTree;
 
 { 
