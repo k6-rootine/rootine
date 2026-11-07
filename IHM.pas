@@ -27,12 +27,8 @@ procedure renderClockArea(time: LongInt);
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
 procedure pollSessionInput(var action: TSessionAction);
 procedure displayCycleEnd(cycle: TCycle; success: Boolean);
-procedure displayMessage(msg: String);
-procedure displayError(msg: String);
-procedure askConfirmation(msg: String; var answer: Boolean);
 procedure displayOuterBorder();
 procedure displayInnerBorder();
-procedure waitForKey();
 procedure renderStatsArea();
 
 const 
@@ -45,16 +41,17 @@ const
 
 implementation
 
-{ restricts the output to a rectangular area of the console (corners are inclusive) }
 procedure enterArea(x1, y1, x2, y2: LongInt);
 begin
+    { restricts the output to a rectangular area of the console (corners/borders are included) }
     Window(x1, y1, x2, y2);
     GoToXY(1, 1);
 end;
 
-{ resets the output to the whole console }
+
 procedure leaveArea();
 begin
+    { resets the output to the whole console }
     Window(1, 1, BORDER_WIDTH + 10, BORDER_HEIGHT + 10);
 end;
 
@@ -498,26 +495,6 @@ end;
 procedure displayCycleEnd(cycle: TCycle; success: Boolean);
 begin 
 
-end;
-
-procedure displayMessage(msg: String);
-begin 
-
-end;
-
-procedure displayError(msg: String);
-begin 
-
-end;
-
-procedure askConfirmation(msg: String; var answer: Boolean);
-begin 
-
-end; 
-
-procedure waitForKey();
-begin 
-    readkey;
 end;
 
 end.

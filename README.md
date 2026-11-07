@@ -9,3 +9,5 @@
 - Implemented a new unit, Utitlies, which contains helper functions, such as the logo, numbers (for the clocks), strings verification, etc
 - Added the option "NONE" for options in enumerated types.
 - Changed get/set description function names to avoid duplication.
+- Introduced private helpers (enterArea, leaveArea,...)
+- Remove unnecessary functions/procedures that we thought was useful (askConfirmation, displayMessage, displayError, etc)
