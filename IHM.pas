@@ -171,7 +171,7 @@ begin
     writeln;
     writeln('[2]   Creer un nouveau compte');
     writeln;
-    writeln('[3]   Quitter');
+    writeln('[0]   Quitter');
 
     {reset the window to the default size}
     leaveArea();
@@ -184,7 +184,7 @@ begin
             choice := IMPORT
         else if (key = '2') then
             choice := REGISTER
-        else if (key = '3') then
+        else if (key = '0') then
             choice := QUIT_START;
     until choice in [IMPORT, REGISTER, QUIT_START];
 end;
@@ -216,7 +216,7 @@ begin
     writeln;
     writeln('[4]   Se deconnecter');
     writeln;
-    writeln('[5]   Quitter');
+    writeln('[0]   Quitter');
 
     {reset the window to the default size}
     leaveArea();
@@ -233,7 +233,7 @@ begin
             choice := VIEW_FOREST
         else if (key = '4') then
             choice := LOGOUT
-        else if (key = '5') then
+        else if (key = '0') then
             choice := QUIT_MAINMENU;
     until choice in [VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU];
 end;
@@ -442,7 +442,7 @@ begin
     writeln;
     writeln('[2]   Mode Personnalise');
     writeln;
-    write('[3]   Retour');
+    writeln('[0]   Retour');
     leaveArea();
 
     repeat
@@ -452,7 +452,7 @@ begin
             mode := POMODORO
         else if (key = '2') then
             mode := CUSTOM
-        else if (key = '3') then
+        else if (key = '0') then
             isReturn := True;
     until (mode in [POMODORO, CUSTOM]) or isReturn;
 end;
@@ -503,12 +503,12 @@ begin
         writeln;
         writeln('[2]   Modifier les parametres');
         writeln;
-        write('[3]   Annuler');
+        writeln('[0]   Annuler');
         leaveArea();
 
         repeat
             key := readkey;
-        until (key = '1') or (key = '2') or (key = '3');
+        until (key = '1') or (key = '2') or (key = '0');
     until key <> '2';
 
     confirmed := (key = '1');
@@ -527,12 +527,12 @@ begin
     writeln;
     writeln('[1]   Confirmer et demarrer');
     writeln;
-    write('[2]   Annuler');
+    writeln('[0]   Annuler');
     leaveArea();
 
     repeat
         key := readkey;
-    until (key = '1') or (key = '2');
+    until (key = '1') or (key = '0');
 
     confirmed := (key = '1');
 end;
@@ -584,7 +584,7 @@ begin
     writeln;
     writeln('[2]   Voir un apercu de l''arbre');
     writeln;
-    writeln('[3]   Choisir un autre arbre');
+    writeln('[0]   Retour / Choisir un autre arbre');
 
     action := NONE_TREECHOICE;
     timedOut := False;
@@ -595,7 +595,7 @@ begin
                 action := CONFIRM_TREE
             else if (key = '2') then
                 action := PREVIEW_TREE
-            else if (key = '3') then
+            else if (key = '0') then
                 action := CANCEL_TREE;
         end
         else
@@ -663,17 +663,17 @@ begin
     begin 
         writeln('[1] Pause/Resume');
         writeln;
-        writeln('[2] Quitter la session');
+        writeln('[0] Quitter la session');
     end
     else
     begin 
         writeln('[1] Pause/Resume');
         writeln;
-        writeln('[2] Quitter la session');
+        writeln('[2] Passer a la prochaine session');
         writeln;
-        writeln('[3] Passer a la prochaine session');
+        writeln('[3] Changer d''arbre');
         writeln;
-        writeln('[4] Changer d''arbre');
+        writeln('[0] Quitter la session');
     end;
 
     leaveArea();
@@ -710,11 +710,11 @@ begin
             readkey {special keys send a second code that must be skipped}
         else if key = '1' then
             action := TOGGLE_PAUSE
-        else if key = '2' then
+        else if key = '0' then
             action := QUIT_SESSION
-        else if (sessionPhase <> FOCUS) and (key = '3') then
+        else if (sessionPhase <> FOCUS) and (key = '2') then
             action := SKIP_PHASE
-        else if (sessionPhase <> FOCUS) and (key = '4') then
+        else if (sessionPhase <> FOCUS) and (key = '3') then
             action := CHANGE_TREE;
     end;
 end;
