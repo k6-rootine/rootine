@@ -9,6 +9,7 @@ type
     TMainMenuChoice = (VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU, NONE_MAINMENU);
     TTreeChoice = (CONFIRM_TREE, PREVIEW_TREE, CANCEL_TREE, NONE_TREECHOICE);
     TSessionAction = (TOGGLE_PAUSE, QUIT_SESSION, CHANGE_TREE, SKIP_PHASE, NONE_SA);
+    TQuitAnswer = (QUIT_YES, QUIT_NO, QUIT_PENDING);
 
 procedure displayStartMenu(var choice: TStartChoice);
 procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
@@ -16,17 +17,19 @@ procedure displayLogin(var username: String);
 procedure displayRegister(var firstname, username, description: String);
 procedure displayProfile(user: TUser);
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
-procedure displayTreeFull(tree: TTree);
+procedure displayTreeFull(tree: TTree; deadline: Int64; var timedOut: Boolean);
 procedure displayCycleModeMenu(var mode: TMode);
 procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt; var confirmed: Boolean);
 procedure displayPomodoroConfiguration(focus, shortBreak, longBreak, nbSessions: LongInt; var confirmed: Boolean);
-procedure displayTreeList(species: TStringArray; var choice: LongInt);
-procedure displayTreeChoice(speciesName: String; var action: TTreeChoice);
+procedure displayTreeList(species: TStringArray; var choice: LongInt; deadline: Int64; var timedOut: Boolean);
+procedure displayTreeChoice(speciesName: String; var action: TTreeChoice; deadline: Int64; var timedOut: Boolean);
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
 procedure renderClockArea(time: LongInt);
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
 procedure pollSessionInput(sessionPhase: TPhaseSession; var action: TSessionAction);
-procedure displayCycleEnd(cycle: TCycle; success: Boolean);
+procedure displayCycleEnd(cycle: TCycle);
+procedure displayQuitConfirmation();
+procedure pollQuitConfirmation(var answer: TQuitAnswer);
 procedure displayOuterBorder();
 procedure displayInnerBorder();
 procedure drawScreenHeader(heading: String);
@@ -76,77 +79,6 @@ begin
         phaseLabel := 'Pause longue'
     else
         phaseLabel := '';
-end;
-
-function readInteger(prompt: String; minValue, maxValue: LongInt): LongInt;
-var
-    input: String;
-    value, code, row: LongInt;
-    isValid: Boolean;
-begin
-    row := WhereY;
-    repeat
-        GoToXY(1, row);
-        clreol;
-        write(prompt);
-        readln(input);
-        val(input, value, code);
-        isValid := (code = 0) and (value >= minValue) and (value <= maxValue);
-
-        GoToXY(1, row + 1);
-        clreol;
-        if not isValid then
-            write('Valeur invalide : entrez un entier entre ', minValue, ' et ', maxValue, '.');
-    until isValid;
-    readInteger := value;
-end;
-
-{ writes text in the current window, going to the next line before a word that would not fit; width is the number of columns of the window }
-procedure writeWrapped(text: String; width: LongInt);
-var
-    w: String;
-    lineLength, spacePos: LongInt;
-begin
-    lineLength := 0;
-    text := text + ' ';
-
-    while length(text) > 0 do
-    begin
-        spacePos := pos(' ', text);
-        w := copy(text, 1, spacePos - 1);
-        delete(text, 1, spacePos);
-
-        if w <> '' then
-        begin
-            {a word longer than a whole line is cut}
-            while length(w) >= width do
-            begin
-                if lineLength > 0 then
-                begin
-                    writeln;
-                    lineLength := 0;
-                end;
-                writeln(copy(w, 1, width - 1));
-                delete(w, 1, width - 1);
-            end;
-
-            {lines stay one character shorter than the window so that a full line does not wrap by itself}
-            if (lineLength > 0) and (lineLength + 1 + length(w) > width - 1) then
-            begin
-                writeln;
-                lineLength := 0;
-            end;
-
-            if lineLength > 0 then
-            begin
-                write(' ');
-                lineLength := lineLength + 1;
-            end;
-            write(w);
-            lineLength := lineLength + length(w);
-        end;
-    end;
-    writeln;
 end;
 
 procedure displayOuterBorder();
@@ -220,9 +152,9 @@ begin
     write(heading);
 end;
 
-{ sets the default colour of the program and clears the screen; to be called once at startup }
 procedure initialiseScreen();
 begin
+    { sets the default colour of the program and clears the screen; to be called once at startup }
     TextColor(DEFAULT_COLOR);
     clrscr;
 end;
@@ -333,66 +265,59 @@ end;
 
 procedure displayRegister(var firstname, username, description: String);
 begin 
+    {initialise variables}
+    firstname := '';
+    username := '';
+    description := '';
+
     {limit the input area to a specific window size to avoid text overflow}
     enterArea(FORM_X, CONTENT_ROW, FORM_X + 90, CONTENT_ROW + 20);
 
     {display instructions}
     writeln('Attention ! ');
-    writeln('- Les caracteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.');
     writeln('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.');
     writeln('- Le nom d''utilisateur doit etre unique et entre 1 et 30 caracteres.');
-    {enter full name, if invalid, ask again}
-    writeln;
-    repeat 
+    writeln('- Les caracteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.');
+
+    {enter username. if already exists or invalid, ask again. an empty username cancels the registration}
+    repeat
         GoToXY(1, 7);
-        clreol;
-        write('Veuillez entrer votre prenom : ');
-        readln(firstname);
-        
-        {remove previous error messages and clear the line for username input}
-        writeln;
-        GoToXY(1, 8);
-        clreol;
-
-        {display error message if full name is invalid}
-        if not isValidName(firstname) then
-        begin
-            writeln('Prenom invalide. Veuillez reessayer.');
-        end;
-    until isValidName(firstname);
-
-    {enter username. if already exists or empty or invalid, ask again}
-    repeat 
-        writeln;
-        GoToXY(1, 9);
         clreol;
         write('Veuillez entrer votre nom d''utilisateur : ');
         readln(username);
         username := lowercase(username);
-        
-        GoToXY(1, 10);
+
+        {remove the previous error message, then display the new one if needed}
+        GoToXY(1, 8);
         clreol;
-        write('Veuillez entrer votre nom d''utilisateur : ', username);
-
-        {remove previous error messages and clear the line for description input}
-        writeln;
-        GoToXY(1, 11);
-        clreol; 
-
-        {display error messages if username is invalid, empty, or already exists}
-        if (userExists(username)) then
-        begin
-            writeln('Nom d''utilisateur deja existant. Veuillez reessayer.');
-        end
-        else if not isValidUsername(username) then
-        begin
+        if (username <> '') and userExists(username) then
+            writeln('Nom d''utilisateur deja existant. Veuillez reessayer.')
+        else if (username <> '') and not isValidUsername(username) then
             writeln('Nom d''utilisateur invalide. Veuillez reessayer.');
-        end;
-    until (username <> '') and (not userExists(username)) and isValidUsername(username);
+    until (username = '') or ((not userExists(username)) and isValidUsername(username));
 
-    writeln;
-    write('Veuillez entrer une description de votre profil : ');
-    readln(description);
+    {the other fields are only asked if the registration was not cancelled}
+    if username <> '' then
+    begin
+        {enter first name, if invalid, ask again}
+        repeat
+            GoToXY(1, 9);
+            clreol;
+            write('Veuillez entrer votre prenom : ');
+            readln(firstname);
+
+            {remove the previous error message, then display the new one if needed}
+            GoToXY(1, 10);
+            clreol;
+            if not isValidName(firstname) then
+                writeln('Prenom invalide. Veuillez reessayer.');
+        until isValidName(firstname);
+
+        GoToXY(1, 11);
+        clreol;
+        write('Veuillez entrer une description de votre profil : ');
+        readln(description);
+    end;
 
     leaveArea();
 end;
@@ -407,12 +332,12 @@ begin
     joinDate := getJoinDate(user);
     forest := getForest(user);
 
-    { calculate the total number of trees grown}
+    { calculate the total number of trees grown }
     totalTrees := 0;
     for i := 1 to getNbSpecies(forest) do
         totalTrees := totalTrees + getNbTreesGrown(forest, i);
 
-    {limit the display area}
+    { limit the display area }
     enterArea(LIST_X, CONTENT_ROW, LIST_X + 60, CONTENT_ROW + 20);
 
     {display all information}
@@ -425,6 +350,8 @@ begin
     writeln('Temps total de concentration : ', format('%.2d:%.2d:%.2d', [getTotalFocusTime(user) div 3600, getTotalFocusTime(user) div 60 mod 60, getTotalFocusTime(user) mod 60]));
     writeln('Nombre d''especes differentes ayant pousse : ', getNbSpecies(forest));
     writeln('Nombre total d''arbres ayant pousse : ', totalTrees);
+    writeln;
+    writeln('Appuyez sur une touche pour revenir...');
 
     leaveArea();
 end; 
@@ -473,12 +400,15 @@ begin
     end;
 end;
 
-procedure displayTreeFull(tree: TTree);
+{ shows the grown tree with its name and description until a key is pressed; with a deadline (a GetTickCount64 value in milliseconds, 0 = no limit) the time left in the break is shown and timedOut is True if the time is up }
+procedure displayTreeFull(tree: TTree; deadline: Int64; var timedOut: Boolean);
+var
+    key: Char;
 begin
     clrscr;
     displayOuterBorder();
     drawVerticalSeparator();
-    
+
     {the tree is shown in its final growth phase}
     renderTreeArea(tree, getNbPhases(tree));
 
@@ -486,13 +416,13 @@ begin
     writeln(uppercase(getSpeciesName(tree)));
     writeln('Apercu de l''etat final');
     writeln;
-    writeWrapped(getTreeDescription(tree), BORDER_WIDTH - 1 - (BORDER_TREE_VERTICAL + 3) + 1);
+    writeWrapped(getTreeDescription(tree), BORDER_WIDTH - 4 - (BORDER_TREE_VERTICAL + 3) + 1);
     writeln;
     writeln;
     writeln('Appuyez sur une touche pour revenir');
 
+    timedOut := not waitKeyUntil(deadline, BORDER_HEIGHT - 6, key);
     leaveArea();
-    readkey;
 end;
 
 procedure displayCycleModeMenu(var mode: TMode);
@@ -607,7 +537,7 @@ begin
     confirmed := (key = '1');
 end;
 
-procedure displayTreeList(species: TStringArray; var choice: LongInt);
+procedure displayTreeList(species: TStringArray; var choice: LongInt; deadline: Int64; var timedOut: Boolean);
 const
     ROWS_PER_COLUMN = 7;
     COLUMN_WIDTH = 30;
@@ -634,11 +564,13 @@ begin
     write('[0]   Retour');
 
     GoToXY(1, ROWS_PER_COLUMN + 4);
-    choice := readInteger('Votre choix : ', 0, nbSpecies);
+    choice := readIntegerUntil('Votre choix : ', 0, nbSpecies, deadline, ROWS_PER_COLUMN + 7, timedOut);
+    if timedOut then
+        choice := 0;
     leaveArea();
 end;
 
-procedure displayTreeChoice(speciesName: String; var action: TTreeChoice);
+procedure displayTreeChoice(speciesName: String; var action: TTreeChoice; deadline: Int64; var timedOut: Boolean);
 var
     key: Char;
     heading: String;
@@ -653,19 +585,26 @@ begin
     writeln('[2]   Voir un apercu de l''arbre');
     writeln;
     writeln('[3]   Choisir un autre arbre');
-    leaveArea();
 
     action := NONE_TREECHOICE;
+    timedOut := False;
     repeat
-        key := readkey;
-
-        if (key = '1') then
-            action := CONFIRM_TREE
-        else if (key = '2') then
-            action := PREVIEW_TREE
-        else if (key = '3') then
+        if waitKeyUntil(deadline, 14, key) then
+        begin
+            if (key = '1') then
+                action := CONFIRM_TREE
+            else if (key = '2') then
+                action := PREVIEW_TREE
+            else if (key = '3') then
+                action := CANCEL_TREE;
+        end
+        else
+        begin
+            timedOut := True;
             action := CANCEL_TREE;
+        end;
     until action <> NONE_TREECHOICE;
+    leaveArea();
 end;
 
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
@@ -767,7 +706,7 @@ begin
     begin
         key := readkey;
 
-        if key = #0 then
+        if key = KEY_SPECIAL then
             readkey {special keys send a second code that must be skipped}
         else if key = '1' then
             action := TOGGLE_PAUSE
@@ -780,13 +719,13 @@ begin
     end;
 end;
 
-procedure displayCycleEnd(cycle: TCycle; success: Boolean);
+procedure displayCycleEnd(cycle: TCycle);
 var
     heading, modeName: String;
     nbSessionsDone: LongInt;
 begin
     {a cycle can only succeed from a break (the current session is complete) and only be abandoned during a focus phase (the current session is unfinished)}
-    if success then
+    if getState(cycle) = FINISHED then
     begin
         heading := 'Cycle termine, bravo !';
         nbSessionsDone := getCurrentSession(cycle);
@@ -812,6 +751,41 @@ begin
     write('Appuyez sur une touche pour continuer...');
     leaveArea();
     readkey;
+end;
+
+{ draws the quit confirmation in the instructions area; it does not wait, so the clock keeps running. The answer is read with pollQuitConfirmation }
+procedure displayQuitConfirmation();
+begin
+    enterArea(BORDER_TREE_VERTICAL + 3, BORDER_STATS_HORIZONTAL + 2, BORDER_WIDTH - 1, BORDER_HEIGHT - 1);
+    ClrScr;
+    writeln('Quitter la session ?');
+    writeln;
+    writeln('L''arbre en cours va mourir.');
+    writeln;
+    writeln('[1] Oui, quitter');
+    writeln;
+    writeln('[2] Non, continuer');
+    leaveArea();
+end;
+
+{ reads the answer to the quit confirmation without waiting: QUIT_PENDING if no valid key was pressed }
+procedure pollQuitConfirmation(var answer: TQuitAnswer);
+var
+    key: Char;
+begin
+    answer := QUIT_PENDING;
+
+    if keypressed then
+    begin
+        key := readkey;
+
+        if key = KEY_SPECIAL then
+            readkey {special keys send a second code that must be skipped}
+        else if key = '1' then
+            answer := QUIT_YES
+        else if key = '2' then
+            answer := QUIT_NO;
+    end;
 end;
 
 end.
