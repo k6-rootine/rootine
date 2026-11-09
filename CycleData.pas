@@ -11,7 +11,7 @@ interface
         TMode = (CUSTOM, POMODORO, NONE_MODE);
 
         {La phase de la session dans laquelle se trouve actuellement l'utilisateur. (Avec LONG_BREAK toutes les N sessions de concentration)}
-        TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK, NONE_PS);
+        TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK, NONE_PHASESESSION);
 
         {L'état du cycle dans lequel se trouve actuellement l'utilisateur.}
         TState = (NOT_STARTED, IN_PROGRESS, FINISHED, ABANDONED, NONE_STATE);
