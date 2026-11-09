@@ -14,7 +14,7 @@ interface
         TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK, NONE_PS);
 
         {L'état du cycle dans lequel se trouve actuellement l'utilisateur.}
-        TState = (NOT_STARTED, IN_PROGRESS, FINISHED, NONE_STATE);
+        TState = (NOT_STARTED, IN_PROGRESS, FINISHED, ABANDONED, NONE_STATE);
 
         {Description complète d'un cycle.}
         TCycle = Record
@@ -43,7 +43,7 @@ interface
     { @returns La durée de la phase en cours, tirée du paramètre correspondant (concentration, pause courte ou pause longue). }
     function getCurrentPhaseDuration(cycle: Tcycle): LongInt;
 
-    { @returns L'état global du cycle (NOT_STARTED, IN_PROGRESS ou FINISHED). }
+    { @returns L'état global du cycle (NOT_STARTED, IN_PROGRESS, FINISHED ou ABANDONED). }
     function getState(cycle: Tcycle): TState;
 
     { Démarre le cycle : passe à la session 1, à la phase FOCUS et à l'état IN_PROGRESS.
@@ -61,12 +61,11 @@ interface
     @param cycle Le cycle à terminer (modifié). }
     procedure finishCycle(var cycle: TCycle);
 
-    { Abandonne le cycle : retour à NOT_STARTED, session 0, phase FOCUS.
-    Les paramètres (mode et durées) sont conservés, le cycle peut donc être redémarré.
-    @param cycle Le cycle à réinitialiser (modifié). }
-    procedure abandonCycle(var cycle: Tcycle);
+    { Marque le cycle comme ABANDONED. Ne fait rien si l'état n'est pas IN_PROGRESS.
+    @param cycle Le cycle à abandonner (modifié). }
+    procedure abandonCycle(var cycle: TCycle);
 
-implementation 
+implementation
 
     function initialiseCycle(mode: TMode; focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt): TCycle;
     var cycle: Tcycle;
@@ -152,16 +151,14 @@ implementation
 
     procedure finishCycle(var cycle: TCycle);
     begin
-    if cycle.state = IN_PROGRESS then
+        if cycle.state = IN_PROGRESS then
             cycle.state := FINISHED;
     end;
 
-    procedure abandonCycle(var cycle: Tcycle);
+    procedure abandonCycle(var cycle: TCycle);
     begin
-        {abandon : retour à l'état initial, les paramètres sont conservés }
-        cycle.currentSession := 0;
-        cycle.currentPhase := FOCUS;
-        cycle.state := NOT_STARTED;
+        if cycle.state = IN_PROGRESS then
+            cycle.state := ABANDONED;
     end;
 
-    end.
+end.
