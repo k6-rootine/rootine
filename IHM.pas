@@ -1,3 +1,11 @@
+{
+Cette unité gère toute l'interface avec l'utilisateur : l'affichage des écrans dans le terminal et la lecture au clavier. @br
+Les procédures sont regroupées par préfixe : @br
+    + display : dessine un écran complet puis (généralement) attend la réponse de l'utilisateur @br
+    + render : redessine uniquement une zone de l'écran de session, sans attendre @br
+    + poll : lit le clavier sans attendre @br
+Tous les écrans sont dessinés dans une fenêtre du terminal de 121 x 35, entourée d'un cadre. Le texte est blanc par défaut. @br
+}
 unit IHM;
 
 interface
@@ -5,53 +13,256 @@ uses
     UserData, TreeData, CycleData, FileManager, crt, SysUtils, Utilities;
 
 type
-    TStartChoice = (IMPORT, REGISTER, QUIT_START, NONE_START);
-    TMainMenuChoice = (VIEW_PROFILE, VIEW_FOREST, LOGOUT, START, QUIT_MAINMENU, NONE_MAINMENU);
-    TTreeChoice = (CONFIRM_TREE, PREVIEW_TREE, CANCEL_TREE, NONE_TREECHOICE);
-    TSessionAction = (TOGGLE_PAUSE, QUIT_SESSION, CHANGE_TREE, SKIP_PHASE, NONE_SA);
-    TQuitAnswer = (QUIT_YES, QUIT_NO, QUIT_PENDING);
+    { Le choix de l'utilisateur dans le menu de démarrage. }
+    TStartChoice = (
+        { Importer un profil existant. }
+        IMPORT, 
+        { Créer un nouveau profil. }
+        REGISTER, 
+        { Quitter le programme. }
+        QUIT_START, 
+        { Aucun choix. }
+        NONE_START);
 
+    { Le choix de l'utilisateur dans le menu principal. }    
+    TMainMenuChoice = (
+        { Voir le profil et les statistiques. }
+        VIEW_PROFILE, 
+        { Voir la forêt. }
+        VIEW_FOREST, 
+        { Se déconnecter et revenir au menu de démarrage. }
+        LOGOUT, 
+        { Démarrer une session de travail. }
+        START, 
+        { Quitter le programme. }
+        QUIT_MAINMENU, 
+        { Aucun choix. }
+        NONE_MAINMENU);
+
+    { Le choix de l'utilisateur après avoir sélectionné une espèce d'arbre }    
+    TTreeChoice = (
+        { Utiliser cet arbre. }
+        CONFIRM_TREE, 
+        { Voir un aperçu de l'arbre entièrement poussé. }
+        PREVIEW_TREE, 
+        { Revenir à la liste des espèces ou revenir à l'écran de session quand le temps de la pause est écoulé. }
+        CANCEL_TREE, 
+        { Aucun choix. }
+        NONE_TREECHOICE);
+
+    { Une action de l'utilisateur sur l'écran de session }
+    TSessionAction = (
+        { Mettre en pause ou reprendre le minuteur. }
+        TOGGLE_PAUSE, 
+        { Quitter la session. }
+        QUIT_SESSION, 
+        { Changer d'arbre (uniquement pendant une pause). }
+        CHANGE_TREE, 
+        { Passer à la session suivante (uniquement pendant une pause). }
+        SKIP_PHASE, 
+        { Aucune action. }
+        NONE_SESSIONACTION);
+
+    { La réponse de l'utilisateur à la confirmation pour quitter la session. }    
+    TQuitAnswer = (
+        { Quitter. L'arbre en cours meurt. }
+        QUIT_YES, 
+        { Continuer la session. }
+        QUIT_NO, 
+        { Pas encore de réponse. }
+        QUIT_PENDING);
+
+{ 
+    @abstract(Affiche le menu de démarrage)
+    @param choice Le choix de l'utilisateur
+}
 procedure displayStartMenu(var choice: TStartChoice);
+
+{
+    @abstract(Affiche le menu principal)
+    @param choice Le choix de l'utilisateur
+    @param user L'utilisateur connecté
+}
 procedure displayMainMenu(var choice: TMainMenuChoice; user: TUser);
+
+{
+    @abstract(Demande le nom d'utilisateur pour importer le profil)
+    Le nom saisi est converti automatiquement en minuscules. 
+    Si l'utilisateur n'existe pas, un message d'erreur s'affiche et le nom est redemandé, 
+        jusqu'à ce qu'il existe ou qu'une entrée vide soit validée.
+    @param username Le nom d'utilisateur d'un compte existant, ou une chaîne vide si l'utilisateur a annulé
+}
 procedure displayLogin(var username: String);
+
+{
+    @abstract(Demande les informations d'un nouveau compte)
+    Il y a des conditions imposées sur les informations. 
+    Si l'utilisateur ne les suit pas, des messages d'erreurs s'affichent et l'information est redemandée, jusqu'à ce que les entrées soient validées.
+    Le nom d'utilisateur est converti automatiquement en minuscules. 
+    @param firstname Le prénom saisi, peut être vide
+    @param username Le nom d'utilisateur saisi. Si vide, l'inscription est annulée
+    @param description La description saisie, peut être vide
+}
 procedure displayRegister(var firstname, username, description: String);
+
+{
+    @abstract(Affiche le profil et les statistiques de l'utilisateur)
+    @param user L'utilisateur dont on affiche le profil
+}
 procedure displayProfile(user: TUser);
+
+{
+    @abstract(Affiche la forêt de l'utilisateur)
+    @param forst La forêt de l'utilisateur
+    @param idx Le numéro de l'espèce choisie dans la forêt
+}
 procedure displayForestOverview(forest: TForest; var idx: LongInt);
+
+{
+    @abstract(Affiche un arbre entièrement poussé avec son nom et sa description)
+    @param tree L'arbre à afficher
+    @param deadline La fin de la pause, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param timedOut Vrai si l'attente s'est arrêtée parce que le temps est écoulé. Faux si une touche a été pressée.
+}
 procedure displayTreeFull(tree: TTree; deadline: Int64; var timedOut: Boolean);
+
+{
+    @abstract(Affiche le choix du mode de cycle)
+    @param mode Le mode choisi, ou NONE_MODE si l'utilisateur revient en arrière
+}
 procedure displayCycleModeMenu(var mode: TMode);
+
+
+{
+    @abstract(Demande les paramètres d'un cycle personnalisé puis les fait confirmer)
+    @param focusDuration La durée d'une session de concentration, en minutes
+    @param shortBreakDuration La durée d'une pause courte, en minutes
+    @param longBreakDuration La durée d'une pause longue, en minutes
+    @param nbSessionsBeforeLongBreak Le nombre de sessions de concentration avant une pause longue
+    @param confirmed Vrai si l'utilisateur a confirmé. Faux s'il a annulé et les valeurs renvoyées ne doivent alors pas être utilisées
+}
 procedure displayCustomConfiguration(var focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt; var confirmed: Boolean);
-procedure displayPomodoroConfiguration(focus, shortBreak, longBreak, nbSessions: LongInt; var confirmed: Boolean);
+
+{
+    @abstract(Affiche les paramètres du mode Pomodoro et demande de les confirmer)
+    @param focusDuration La durée d'une session de concentration, en minutes
+    @param shortBreakDuration La durée d'une pause courte, en minutes
+    @param longBreakDuration La durée d'une pause longue, en minutes
+    @param nbSessionsBeforeLongBreak Le nombre de sessions de concentration avant une pause longue
+    @param confirmed Vrai si l'utilisateur a confirmé. Faux s'il a annulé
+}
+procedure displayPomodoroConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt; var confirmed: Boolean);
+
+{
+    @abstract(Affiche la liste des espèces disponibles et demande laquelle faire pousser)
+    @param species La liste des noms d'espèces disponibles
+    @param choice Le numéro de l'espèce choisie dans la liste, ou 0 si l'utilisateur revient en arrière ou si le temps est écoulé
+    @param deadline La fin de la pause, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param timedOut Vrai si la saisie s'est arrêtée parce que le temps est écoulé.
+}
 procedure displayTreeList(species: TStringArray; var choice: LongInt; deadline: Int64; var timedOut: Boolean);
+
+{
+    @abstract(Affiche le choix à faire après avoir sélectionné une espèce)
+    @param speciesName Le nom de l'espèce choisie, affiché dans le titre
+    @param action Le choix de l'utilisateur
+    @param deadline La fin de la pause, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param timedOut Vrai si le temps est écoulé avant qu'une touche valide soit pressée
+}
 procedure displayTreeChoice(speciesName: String; var action: TTreeChoice; deadline: Int64; var timedOut: Boolean);
+
+{
+    @abstract(Dessine l'arbre dans sa zone dédiée)
+    L'arbre est dessiné caractère par caractère, chacun avec sa couleur. La couleur par défaut est rétablie ensuite.
+    @param tree L'arbre à dessiner
+    @param treePhase Le numéro de la phase de croissance à dessiner
+}
 procedure renderTreeArea(tree: TTree; treePhase: LongInt);
+
+{
+    @abstract(Dessine l'horloge dans sa zone dédiée)
+    Le temps est affiché en grands chiffres sous la forme mm:ss. Seule la zone de l'horloge est modifiée.
+    @param time Le temps à afficher, en secondes
+}
 procedure renderClockArea(time: LongInt);
+
+{
+    @abstract(Dessine la liste des touches disponibles dans sa zone dédiée)
+    @param sessionPhase La phase de la session en cours
+}
 procedure renderInstructionsArea(sessionPhase: TPhaseSession);
+
+{
+    @abstract(Lit une action de l'utilisateur sur l'écran de session, sans attendre)
+    @param sessionPhase La phase de la session en cours
+    @param action L'action demandée
+}
 procedure pollSessionInput(sessionPhase: TPhaseSession; var action: TSessionAction);
+
+{
+    @abstract(Affiche le résumé à la fin d'un cycle et attend une touche)
+    @param cycle Le cycle qui vient de se terminer
+}
 procedure displayCycleEnd(cycle: TCycle);
+
+{
+    @abstract(Affiche la confirmation pour quitter la session pendant une session de concentration)
+}
 procedure displayQuitConfirmation();
+
+{
+    @abstract(Lit la réponse à la confirmation pour quitter la session, sans attendre)
+    @param answer La réponse
+}
 procedure pollQuitConfirmation(var answer: TQuitAnswer);
-procedure displayOuterBorder();
-procedure displayInnerBorder();
-procedure drawScreenHeader(heading: String);
+
+{
+    @abstract(Dessine le cadre autour de tour l'écran)
+}
+procedure renderOuterBorder();
+
+{
+    @abstract(Dessine les lignes de séparation de l'écran des session)
+}
+procedure renderInnerBorder();
+
+{
+    @abstract(Prépare un nouvel écran : éfface tout, puis dessine le logo, le cadre, et un titre)
+    @param heading Le titre à afficher
+}
+procedure renderScreenHeader(heading: String);
+
+{
+    @abstract(Prépare le terminal au démarrage du programme)
+}
 procedure initialiseScreen();
+
+{
+    @abstract(Affiche les informations de la session dans sa zone dédiée)
+    @param phase La phase de la session en cours
+    @param session Le numéro de la session de concentration en cours
+    @param speciesName Le nom de l'espèce de l'arbre
+    @param isPaused Vrai si le minuteur est en pause. Faux sinon
+}
 procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: String; isPaused: Boolean);
 
-const
-    BORDER_CHAR = '*';
-    BORDER_WIDTH = 121;
-    BORDER_HEIGHT = 35; { dimension w/o border is 118x33, w/ border is 120x35 }
-    BORDER_TREE_VERTICAL = 80; { dimension of tree w/ border is 80x35, w/o border is 78x33 }
-    BORDER_CLOCK_HORIZONTAL = 13; { dimension of clock area w/ border is 40x20, w/o border is 38x18 }
-    BORDER_STATS_HORIZONTAL = 20;
 
-    LOGO_X = 30; { position of the RootineLogo }
-    LOGO_Y = 5;
-    HEADING_ROW = 16; { row of the centred heading under the logo }
-    CONTENT_ROW = 18; { first row of the content area under the heading }
-    MENU_X = 40; { left column of the menus and choices }
-    LIST_X = 30; { left column of the lists, login and profile }
-    FORM_X = 15; { left column of the register form }
-    DEFAULT_COLOR = crt.White; { colour of all the text; any other colour is local and must restore this one }
+
+const
+    BORDER_CHAR = '*'; { Caractère avec lequel le cadre est tracé }
+    BORDER_WIDTH = 121; { Nombre de colonnes de l'écran, cadre compris }
+    BORDER_HEIGHT = 35; { Nombre de lignes de l'écran, cadre compris }
+    BORDER_TREE_VERTICAL = 80; { Colonne de la ligne qui sépare l'arbre (à gauche) du panneau à droite }
+    BORDER_CLOCK_HORIZONTAL = 13; { Ligne qui sépare l'horloge des informations de la session }
+    BORDER_STATS_HORIZONTAL = 20; { Ligne qui sépare les informations de la session des instructions }
+    LOGO_X = 30; { Colonne du coin supérieur gauche du logo }
+    LOGO_Y = 5; { Ligne du coin supérieur gauche du logo }
+    HEADING_ROW = 16; { Ligne du titre centré, sous le logo }
+    CONTENT_ROW = 18; { Première ligne du contenu d'un écran, sous le titre }
+    MENU_X = 40; { Colonne de gauche des menus et des choix }
+    LIST_X = 30; { Colonne de gauche des listes, de la connexion et du profil }
+    FORM_X = 15; { Colonne de gauche du formulaire d'inscription }
+    DEFAULT_COLOR = crt.White; { Couleur défaut du programme }
 
 implementation
 
@@ -81,7 +292,7 @@ begin
         phaseLabel := '';
 end;
 
-procedure displayOuterBorder();
+procedure renderOuterBorder();
 var 
     width, height : LongInt;
 begin 
@@ -106,7 +317,7 @@ begin
     end;
 end;
 
-procedure drawVerticalSeparator();
+procedure renderVerticalSeparator();
 var
     vertical : LongInt;
 begin
@@ -118,7 +329,7 @@ begin
     end;
 end;
 
-procedure drawHorizontalSeparator(y: LongInt);
+procedure renderHorizontalSeparator(y: LongInt);
 var
     horizontal : LongInt;
 begin
@@ -130,24 +341,24 @@ begin
     end;
 end;
 
-procedure displayInnerBorder();
+procedure renderInnerBorder();
 begin
     {display the separation line between the tree and the clock/stats/instructions areas}
-    drawVerticalSeparator();
+    renderVerticalSeparator();
 
     {display the separation line between the clock and the stats areas}
-    drawHorizontalSeparator(BORDER_CLOCK_HORIZONTAL);
+    renderHorizontalSeparator(BORDER_CLOCK_HORIZONTAL);
     
     {display the separation line between the stats and instructions areas}
-    drawHorizontalSeparator(BORDER_STATS_HORIZONTAL);
+    renderHorizontalSeparator(BORDER_STATS_HORIZONTAL);
 end;
 
-procedure drawScreenHeader(heading: String);
+procedure renderScreenHeader(heading: String);
 begin
     { clears the screen and draws the logo, the outer border and a centred heading (the heading may be empty) }
     clrscr;
     RootineLogo(LOGO_X, LOGO_Y);
-    displayOuterBorder();
+    renderOuterBorder();
     GoToXY((BORDER_WIDTH - length(heading)) div 2, HEADING_ROW);
     write(heading);
 end;
@@ -370,7 +581,7 @@ begin
         heading := 'Votre foret est vide pour le moment.'
     else
         heading := 'Votre foret : choisissez une espece a afficher :';
-    drawScreenHeader(heading);
+    renderScreenHeader(heading);
 
     if nbSpecies = 0 then
     begin
@@ -406,8 +617,8 @@ var
     key: Char;
 begin
     clrscr;
-    displayOuterBorder();
-    drawVerticalSeparator();
+    renderOuterBorder();
+    renderVerticalSeparator();
 
     {the tree is shown in its final growth phase}
     renderTreeArea(tree, getNbPhases(tree));
@@ -435,7 +646,7 @@ begin
     mode := NONE_MODE;
     heading := 'Veuillez choisir un mode de cycle :';
 
-    drawScreenHeader(heading);
+    renderScreenHeader(heading);
 
     enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, CONTENT_ROW + 20);
     writeln('[1]   Mode Pomodoro');
@@ -479,7 +690,7 @@ begin
     repeat
         {form: one field every two rows, the row below each field is used by readInteger for its error message}
         heading := 'Mode personnalise : entrez vos parametres';
-        drawScreenHeader(heading);
+        renderScreenHeader(heading);
 
         enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
         GoToXY(1, 1);
@@ -494,7 +705,7 @@ begin
 
         {summary and choice}
         heading := 'Votre configuration :';
-        drawScreenHeader(heading);
+        renderScreenHeader(heading);
 
         enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
         printConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
@@ -514,16 +725,16 @@ begin
     confirmed := (key = '1');
 end;
 
-procedure displayPomodoroConfiguration(focus, shortBreak, longBreak, nbSessions: LongInt; var confirmed: Boolean);
+procedure displayPomodoroConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt; var confirmed: Boolean);
 var
     key: Char;
     heading: String;
 begin
     heading := 'Mode Pomodoro';
-    drawScreenHeader(heading);
+    renderScreenHeader(heading);
 
     enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
-    printConfiguration(focus, shortBreak, longBreak, nbSessions);
+    printConfiguration(focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak);
     writeln;
     writeln('[1]   Confirmer et demarrer');
     writeln;
@@ -548,7 +759,7 @@ begin
     nbSpecies := getNbAvailableSpecies(species);
     heading := 'Selectionnez un arbre a faire pousser :';
 
-    drawScreenHeader(heading);
+    renderScreenHeader(heading);
 
     {species are listed in columns of ROWS_PER_COLUMN entries}
     enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
@@ -577,7 +788,7 @@ var
 begin
     heading := 'Vous avez choisi : ' + speciesName;
 
-    drawScreenHeader(heading);
+    renderScreenHeader(heading);
 
     enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, BORDER_HEIGHT - 2);
     writeln('[1]   Confirmer ce choix');
@@ -700,7 +911,7 @@ procedure pollSessionInput(sessionPhase: TPhaseSession; var action: TSessionActi
 var
     key: Char;
 begin
-    action := NONE_SA;
+    action := NONE_SESSIONACTION;
 
     if keypressed then
     begin
@@ -741,7 +952,7 @@ begin
     else
         modeName := 'Personnalise';
 
-    drawScreenHeader(heading);
+    renderScreenHeader(heading);
 
     enterArea(MENU_X, CONTENT_ROW, MENU_X + 40, BORDER_HEIGHT - 2);
     writeln('Mode : ', modeName);
