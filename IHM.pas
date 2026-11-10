@@ -258,17 +258,17 @@ procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: S
 
 const
     BORDER_CHAR = '*'; //< Caractère avec lequel le cadre est tracé
-    BORDER_TREE_VERTICAL = 80; //> Colonne de la ligne qui sépare l'arbre (à gauche) du panneau à droite 
-    BORDER_CLOCK_HORIZONTAL = 13; //> Ligne qui sépare l'horloge des informations de la session
-    BORDER_STATS_HORIZONTAL = 20; //> Ligne qui sépare les informations de la session des instructions 
-    LOGO_X = 30; //> Colonne du coin supérieur gauche du logo 
-    LOGO_Y = 5; //> Ligne du coin supérieur gauche du logo 
-    HEADING_ROW = 16; //> Ligne du titre centré, sous le logo
-    CONTENT_ROW = 18; //> Première ligne du contenu d'un écran, sous le titre 
-    MENU_X = 40; //> Colonne de gauche des menus et des choix 
-    LIST_X = 30; //> Colonne de gauche des listes, de la connexion et du profil 
-    FORM_X = 15; //> Colonne de gauche du formulaire d'inscription 
-    DEFAULT_COLOR = crt.White; //> Couleur défaut du programme 
+    BORDER_TREE_VERTICAL = 80; //< Colonne de la ligne qui sépare l'arbre (à gauche) du panneau à droite 
+    BORDER_CLOCK_HORIZONTAL = 13; //< Ligne qui sépare l'horloge des informations de la session
+    BORDER_STATS_HORIZONTAL = 20; //< Ligne qui sépare les informations de la session des instructions 
+    LOGO_X = 30; //< Colonne du coin supérieur gauche du logo 
+    LOGO_Y = 5; //< Ligne du coin supérieur gauche du logo 
+    HEADING_ROW = 16; //< Ligne du titre centré, sous le logo
+    CONTENT_ROW = 18; //< Première ligne du contenu d'un écran, sous le titre 
+    MENU_X = 40; //< Colonne de gauche des menus et des choix 
+    LIST_X = 30; //< Colonne de gauche des listes, de la connexion et du profil 
+    FORM_X = 15; //< Colonne de gauche du formulaire d'inscription 
+    DEFAULT_COLOR = crt.White; //< Couleur défaut du programme 
 
 implementation
 
