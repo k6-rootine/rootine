@@ -73,7 +73,6 @@ implementation
 procedure createDataFolders();
 begin
     { creates the data folders (users and trees) if they are missing }
-
     ForceDirectories(PATH_USER);
     ForceDirectories(PATH_TREE);
 end;

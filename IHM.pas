@@ -97,7 +97,8 @@ procedure displayLogin(var username: String);
 {
     @abstract(Demande les informations d'un nouveau compte)
     Il y a des conditions imposées sur les informations. @br
-    Si l'utilisateur ne les suit pas, des messages d'erreurs s'affichent et l'information est redemandée, jusqu'à ce que les entrées soient validées. @br
+    Si l'utilisateur ne les suit pas, des messages d'erreurs s'affichent et 
+        l'information est redemandée, jusqu'à ce que les entrées soient validées. @br
     Le nom d'utilisateur est converti automatiquement en minuscules. 
     @param firstname Le prénom saisi, peut être vide
     @param username Le nom d'utilisateur saisi. Si vide, l'inscription est annulée

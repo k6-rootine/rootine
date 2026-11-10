@@ -80,11 +80,7 @@ interface
         @param(timer Le minuteur à reprendre.)
     }
     procedure resumeTimer(var timer: TTimer);
-    
-    { procedure resetTimer(var TTimer, duration: LongInt); 
-        Note from Minh: don't write this procedure yet. i think this procedure is redundant and 
-        it is actually initialiseTimer :))
-    }
+
 implementation 
     function initialiseTimer(duration: LongInt): TTimer;
     var 
