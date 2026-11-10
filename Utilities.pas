@@ -1,32 +1,122 @@
+{
+    Cette unité regroupe les procédures et fonctions utilitaires du programme.
+}
 unit Utilities;
 
 interface
 
 uses crt, SysUtils;
 
+{
+    @abstract(Dessine le logo Rootine)
+    @param X La colonne du coin supérieur gauche du logo
+    @param Y La ligne du coin supérieur gauche du logo
+}
 procedure RootineLogo(X, Y: LongInt);
+
+{
+    @abstract(Écrit un symbole de l'horloge en grand)
+    @param number Le chiffre à écrire, de 0 à 9, ou -1 pour les deux points
+}
 procedure displayClockNumber(number: LongInt);
+
+{
+    @abstract(Vérifie qu'un nom d'utilisateur est valide)
+    @param username Le nom d'utilisateur à vérifier
+    @returns(Vrai si le nom d'utilisateur est valide)
+}
 function isValidUsername(username: String): Boolean;
+
+{
+    @abstract(Vérifie qu'un prénom est valide)
+    @param fullname le prénom à vérifier
+    @returns(Vrai si le prénom est valide)
+}
 function isValidName(fullname: String): Boolean;
+
+{
+    @abstract(Calcule la phase de croissance d'un arbre selon te temps écoulé)
+    @param nbPhases Le nombre de phases de l'arbre
+    @param elapsed Le temps écoulé de la session, en secondes
+    @param duration La durée totale de la session, en secondes
+    @returns(Le numéro de la phase à afficher, de 1 à nbPhases, ou 0 si nbPhases n'est pas strictement positif)
+}
 function computeGrowthPhase(nbPhases, elapsed, duration: LongInt): LongInt;
+
+{
+    @abstract(Écrit un texte sur plusieurs lignes sans couper les mots)
+    @param text Le texte à écrire
+    @param width La largeur de la zone d'écriture, en nombre de colonnes
+}
 procedure writeWrapped(text: String; width: LongInt);
+
+{
+    @abstract(Attend une touche, avec une limite de temps éventuelle)
+    @param deadline La fin de l'attente, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param countdownRow La ligne de la fenêtre courante où le temps restant est affiché
+    @param key La touche pressée
+    @returns(Vrai si une touche a été pressée. Faux si le temps est écoulé)
+}
 function waitKeyUntil(deadline: Int64; countdownRow: LongInt; var key: Char): Boolean;
+
+{
+    @abstract(Lit un nombre entier compris dans un intervalle, avec une limite de temps éventuelle)
+    @param prompt Le message affiché devant la saisie
+    @param minValue La plus petite valeur acceptée
+    @param maxValue La plus grande valeur acceptée
+    @param deadline La fin de la saisie, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param countdownRow La ligne de la fenêtre courante où le temps restant est affiché
+    @param timedOut Vrai si la saise s'est arrêtée parce que le temps est écoulé
+    @returns(Le nombre saisi. Si le temps est écoule, la valeur renvoyée n'est pas significative)
+}
 function readIntegerUntil(prompt: String; minValue, maxValue: LongInt; deadline: Int64; countdownRow: LongInt; var timedOut: Boolean): LongInt;
+
+{
+    @abstract(Lit un nombre entier compris dans un intervalle, sans limite de temps)
+    @param prompt Le message affiché devant la saisie
+    @param minValue La plus petite valeur acceptée
+    @param maxValue La plus grande valeur acceptée
+    @returns(Le nombre saisi)
+}
 function readInteger(prompt: String; minValue, maxValue: LongInt): LongInt;
 
+{
+    @abstract(Restreint l'affichage à une zone rectangulaire du cadre)
+    Les coordonnées sont celles du cadre : (1, 1) est son coin supérieur gauche. Les coins donnés font partie de la zone. Le curseur est placé en haut à gauche de la zone.
+    Chaque appel doit être suivi d'un appel à leaveArea quand on a fini d'écrire dans la zone.
+    @param x1 La colonne du coin supérieur gauche de la zone
+    @param y1 La ligne du coin supérieur gauche de la zone
+    @param x2 La colonne du coin inférieur droit de la zone
+    @param y2 La ligne du coin inférieur droit de la zone
+}
+procedure enterArea(x1, y1, x2, y2: LongInt);
+
+{
+    @abstract(Remet l'affichage sur tout le cadre)
+    Annule enterArea : les coordonnées sont de nouveau celles du cadre entier.
+}
+procedure leaveArea();
+
+{
+    @abstract(Donne l'instant actuel en ms)
+    Le nombre est celui de GetTickCount64. Il ne sert qu'à mesurer des durées en faisant la différence de deux appels.
+    @returns(Le nombre de ms écoulées depuis le démarrage de Windows)
+}
+function currentTick(): Int64;
+
 const
-    KEY_SPECIAL = #0; { first code of an extended key (arrows, F1...), followed by a second code }
-    KEY_BACKSPACE = #8;
-    KEY_ENTER = #13;
+    KEY_SPECIAL = #0; { Premier code d'une touche spéciale (flèches, F1...), suivi d'un second code }
+    KEY_BACKSPACE = #8; { Touche Retour arrière }
+    KEY_ENTER = #13; { Touche Entrée }
+    BORDER_WIDTH = 121; { Nombre de colonnes de l'écran, cadre compris }
+    BORDER_HEIGHT = 35; { Nombre de lignes de l'écran, cadre compris }
+    SCREEN_MARGIN_X = 4; { Distance, en colonnes, entre les bords gauche et droit du terminal verrouillé et le cadre}
+    SCREEN_MARGIN_Y = 2; { Distance, en lignes, entre les bords haut et bas du terminal verrouillé et le cadre }
 
 implementation
 const 
     ALLOWED_USERNAME_CHARS = ['a'..'z', '0'..'9'];
     ALLOWED_FULLNAME_CHARS = ['a'..'z', 'A'..'Z', ' ', '-', ''''];
-    BORDER_WIDTH = 121;
-    BORDER_HEIGHT = 35;
-    SCREEN_MARGIN_X = 4;
-    SCREEN_MARGIN_Y = 2;
     NUMBERS : Array[0..9, 1..7] of String = (
         ('######', '##  ##', '##  ##', '##  ##', '##  ##', '##  ##', '######'),   { 0 }
         ('####  ', '  ##  ', '  ##  ', '  ##  ', '  ##  ', '  ##  ', '######'),   { 1 }
@@ -41,10 +131,28 @@ const
     );
     COLON : Array[1..7] of String = ('    ', '    ', ' ## ', '    ', ' ## ', '    ', '    ');
 
+procedure enterArea(x1, y1, x2, y2: LongInt);
+begin
+    { restricts the output to a rectangular area of the frame (corners/borders are included) }
+    Window(x1 + SCREEN_MARGIN_X, y1 + SCREEN_MARGIN_Y, x2 + SCREEN_MARGIN_X, y2 + SCREEN_MARGIN_Y);
+    GoToXY(1, 1);
+end;
+
+procedure leaveArea();
+begin
+    { resets the output to the whole frame }
+    Window(SCREEN_MARGIN_X + 1, SCREEN_MARGIN_Y + 1, BORDER_WIDTH + SCREEN_MARGIN_X + 1, BORDER_HEIGHT + SCREEN_MARGIN_Y + 1);
+end;
+
+function currentTick(): Int64;
+begin
+    currentTick := Int64(GetTickCount64);
+end;
+
 procedure RootineLogo(X, Y: LongInt);
 begin 
-    {restrict the logo to a specific area of the console}
-    Window(X + SCREEN_MARGIN_X, Y + SCREEN_MARGIN_Y, BORDER_WIDTH - 1 + SCREEN_MARGIN_X, Y + 10 + SCREEN_MARGIN_Y);
+    enterArea(X, Y, BORDER_WIDTH - 1, Y + 10);
+
     writeln('########                         ##     ##');
     writeln('##     ##                        ##     ##');
     writeln('##     ##                        ##');
@@ -55,15 +163,14 @@ begin
     writeln('##     ##  ##    ##  ##    ##    ##  ## ##  ##     ## ##     ##');
     writeln('##      ##  ######    ######      ####  ##  ##     ##  ######');
 
-    {reset the window to the full console size}
-    Window(SCREEN_MARGIN_X + 1, SCREEN_MARGIN_Y + 1, BORDER_WIDTH + SCREEN_MARGIN_X + 1, BORDER_HEIGHT + SCREEN_MARGIN_Y + 1);
+    leaveArea();
 end;
 
 procedure displayClockNumber(number: LongInt);
 var 
     i: LongInt;
 begin 
-    {0..9 numbers, -1 the colon}
+    { 0..9 numbers, -1 the colon }
 
     if (number >= 0) and (number <= 9) then 
         for i := 1 to 7 do 
@@ -125,7 +232,9 @@ function secondsLeft(deadline: Int64): LongInt;
 var
     remaining: Int64;
 begin
-    remaining := deadline - Int64(GetTickCount64);
+    { returns the time remaining by calculating the difference between two ticks, then convert to seconds }
+    remaining := deadline - currentTick();
+
     if remaining <= 0 then
         secondsLeft := 0
     else
@@ -145,7 +254,6 @@ begin
     GoToXY(x, y);
 end;
 
-{ waits for a key. Without deadline (0) it is a plain readkey. With a deadline it keeps the countdown up to date and returns False if the deadline is reached before a key is pressed }
 function waitKeyUntil(deadline: Int64; countdownRow: LongInt; var key: Char): Boolean;
 var
     lastShown: LongInt;
@@ -153,13 +261,14 @@ begin
     waitKeyUntil := True;
 
     if deadline = 0 then
+        { no time constraint, just read }
         key := readkey
     else
     begin
-        lastShown := secondsLeft(deadline);
+        lastShown := secondsLeft(deadline); { time currently displayed in countdown }
         renderBreakCountdown(deadline, countdownRow);
 
-        while (not keypressed) and (Int64(GetTickCount64) < deadline) do
+        while (not keypressed) and (currentTick() < deadline) do
         begin
             if secondsLeft(deadline) <> lastShown then
             begin
@@ -173,7 +282,7 @@ begin
         begin
             key := readkey;
             if key = KEY_SPECIAL then
-                readkey {special keys send a second code that must be skipped}
+                readkey; { special keys send a second code that must be skipped }
         end
         else
             waitKeyUntil := False;
@@ -191,12 +300,14 @@ begin
     value := minValue;
     row := WhereY;
     repeat
+        { write the prompt at a specific coord }
         GoToXY(1, row);
         clreol;
         write(prompt);
 
         if deadline = 0 then
         begin
+            { no time constraint. readln normally }
             readln(input);
             isEntered := True;
         end
@@ -205,16 +316,19 @@ begin
             input := '';
             key := ' ';
             repeat
+                { verify if the user presses a key }
                 isEntered := waitKeyUntil(deadline, countdownRow, key);
                 if isEntered then
                 begin
                     if (key = KEY_BACKSPACE) and (length(input) > 0) then
                     begin
+                        { backspace -> delete the previous character }
                         delete(input, length(input), 1);
                         write(KEY_BACKSPACE, ' ', KEY_BACKSPACE);
                     end
-                    else if (key >= ' ') and (length(input) < 10) then
+                    else if (key in ['0'..'9']) and (length(input) < 10) then { length input < 10 since LongInt max 10 digits }
                     begin
+                        { prints out the corresponding number }
                         input := input + key;
                         write(key);
                     end;
@@ -264,7 +378,7 @@ begin
 
         if w <> '' then
         begin
-            {a word longer than a whole line is cut}
+            { a word longer than a whole line is cut }
             while length(w) >= width do
             begin
                 if lineLength > 0 then
@@ -276,7 +390,7 @@ begin
                 delete(w, 1, width - 1);
             end;
 
-            {lines stay one character shorter than the window so that a full line does not wrap by itself}
+            { lines stay one character shorter than the window so that a full line does not wrap by itself }
             if (lineLength > 0) and (lineLength + 1 + length(w) > width - 1) then
             begin
                 writeln;
