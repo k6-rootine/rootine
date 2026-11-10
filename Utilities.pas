@@ -105,13 +105,13 @@ procedure leaveArea();
 function currentTick(): Int64;
 
 const
-    KEY_SPECIAL = #0; { Premier code d'une touche spéciale (flèches, F1...), suivi d'un second code }
-    KEY_BACKSPACE = #8; { Touche Retour arrière }
-    KEY_ENTER = #13; { Touche Entrée }
-    BORDER_WIDTH = 121; { Nombre de colonnes de l'écran, cadre compris }
-    BORDER_HEIGHT = 35; { Nombre de lignes de l'écran, cadre compris }
-    SCREEN_MARGIN_X = 4; { Distance, en colonnes, entre les bords gauche et droit du terminal verrouillé et le cadre}
-    SCREEN_MARGIN_Y = 2; { Distance, en lignes, entre les bords haut et bas du terminal verrouillé et le cadre }
+    KEY_SPECIAL = #0; //> Premier code d'une touche spéciale (flèches, F1...), suivi d'un second code 
+    KEY_BACKSPACE = #8; //> Touche Retour arrière 
+    KEY_ENTER = #13; //> Touche Entrée 
+    BORDER_WIDTH = 121; //> Nombre de colonnes de l'écran, cadre compris 
+    BORDER_HEIGHT = 35; //> Nombre de lignes de l'écran, cadre compris 
+    SCREEN_MARGIN_X = 4; //> Distance, en colonnes, entre les bords gauche et droit du terminal verrouillé et le cadre
+    SCREEN_MARGIN_Y = 2; //> Distance, en lignes, entre les bords haut et bas du terminal verrouillé et le cadre
 
 implementation
 const 
