@@ -96,8 +96,8 @@ procedure displayLogin(var username: String);
 
 {
     @abstract(Demande les informations d'un nouveau compte)
-    Il y a des conditions imposées sur les informations. 
-    Si l'utilisateur ne les suit pas, des messages d'erreurs s'affichent et l'information est redemandée, jusqu'à ce que les entrées soient validées.
+    Il y a des conditions imposées sur les informations. @br
+    Si l'utilisateur ne les suit pas, des messages d'erreurs s'affichent et l'information est redemandée, jusqu'à ce que les entrées soient validées. @br
     Le nom d'utilisateur est converti automatiquement en minuscules. 
     @param firstname Le prénom saisi, peut être vide
     @param username Le nom d'utilisateur saisi. Si vide, l'inscription est annulée
@@ -131,7 +131,6 @@ procedure displayTreeFull(tree: TTree; deadline: Int64; var timedOut: Boolean);
     @param mode Le mode choisi, ou NONE_MODE si l'utilisateur revient en arrière
 }
 procedure displayCycleModeMenu(var mode: TMode);
-
 
 {
     @abstract(Demande les paramètres d'un cycle personnalisé puis les fait confirmer)
