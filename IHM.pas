@@ -594,7 +594,7 @@ begin
         for i := 1 to nbSpecies do
         begin
             GoToXY(1 + ((i - 1) div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + ((i - 1) mod ROWS_PER_COLUMN)); { formula to calculate position to print items in this layout }
-            write('[', i, ']   ', getForestSpeciesName(forest, i), ' (x', getNbTreesGrown(forest, i), ')');
+            write(format('%-6s%s (x%d)', ['[' + inttostr(i) + ']', getForestSpeciesName(forest, i), getNbTreesGrown(forest, i)]));
         end;
         GoToXY(1, ROWS_PER_COLUMN + 2);
         write('[0]   Retour');
@@ -694,13 +694,13 @@ begin
         enterArea(LIST_X, CONTENT_ROW, BORDER_WIDTH - 2, BORDER_HEIGHT - 2);
 
         GoToXY(1, 1);
-        focusDuration := readInteger('Duree de concentration (1-' + inttostr(MAX_MINUTES) + ' minutes) : ', 1, MAX_MINUTES);
+        focusDuration := readInteger(format('Duree de concentration (1-%d minutes) : ', [MAX_MINUTES]), 1, MAX_MINUTES);
         GoToXY(1, 3);
-        shortBreakDuration := readInteger('Duree de pause courte (1-' + inttostr(MAX_MINUTES) + ' minutes) : ', 1, MAX_MINUTES);
+        shortBreakDuration := readInteger(format('Duree de pause courte (1-%d minutes) : ', [MAX_MINUTES]), 1, MAX_MINUTES);
         GoToXY(1, 5);
-        longBreakDuration := readInteger('Duree de pause longue (1-' + inttostr(MAX_MINUTES) + ' minutes) : ', 1, MAX_MINUTES);
+        longBreakDuration := readInteger(format('Duree de pause longue (1-%d minutes) : ', [MAX_MINUTES]), 1, MAX_MINUTES);
         GoToXY(1, 7);
-        nbSessionsBeforeLongBreak := readInteger('Sessions avant une pause longue (1-' + inttostr(MAX_NB_SESSIONS) + ') : ', 1, MAX_NB_SESSIONS);
+        nbSessionsBeforeLongBreak := readInteger(format('Sessions avant une pause longue (1-%d) : ', [MAX_NB_SESSIONS]), 1, MAX_NB_SESSIONS);
 
         leaveArea();
 
@@ -771,10 +771,8 @@ begin
     for i := 0 to nbSpecies - 1 do
     begin
         GoToXY(1 + (i div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + (i mod ROWS_PER_COLUMN));
-        if (i < 9) then
-            write('[', i + 1, ']   ', species[i])
-        else
-            write('[', i + 1, ']  ', species[i]);
+        {the number is padded to 6 characters so that the names stay aligned from [10] on}
+        write(format('%-6s%s', ['[' + inttostr(i + 1) + ']', species[i]]));
     end;
     GoToXY(1, ROWS_PER_COLUMN + 2);
     write('[0]   Retour');
