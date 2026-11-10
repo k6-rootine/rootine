@@ -14,3 +14,4 @@
 - Removal of TStringArray in FileManager since SysUtils already has that
 - Introduced booleans in some functions/procedures to report whether the user confirmed or cancelled 
 - Some IHMs call functions/procedures that are not initially planned (displayLogin, displayRegister, etc)
+- Created new procedures and change the orders of top-down analysis with respect to original planning

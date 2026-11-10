@@ -420,4 +420,5 @@ begin
     initialiseScreen();
     handleStartMenu();
     displayQuit();
+    clrscr;
 end.
