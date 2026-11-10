@@ -1,5 +1,5 @@
 ﻿{ 
-Cette unité gère la lecture et l'écriture des fichiers de sauvegarde des utilisateurs et des arbres.
+    Cette unité gère la lecture et l'écriture des fichiers de sauvegarde des utilisateurs et des arbres.
 }
 unit FileManager;
 
@@ -70,6 +70,15 @@ function getNbAvailableSpecies(availableSpecies: TStringArray): LongInt;
 
 implementation
 
+procedure createDataFolders();
+begin
+    { creates the data folders (users and trees) if they are missing }
+
+    ForceDirectories(PATH_USER);
+    ForceDirectories(PATH_TREE);
+end;
+
+
 function userExists(username: string): Boolean;
 begin
     userExists := FileExists(PATH_USER + username + FILE_EXT_USER);
@@ -79,6 +88,7 @@ procedure saveUser(user: TUser);
 var
     f: File of TUser;
 begin
+    createDataFolders();
     assign(f, PATH_USER + getUsername(user) + FILE_EXT_USER);
     rewrite(f);
     write(f, user);
