@@ -1,6 +1,7 @@
 {
-Cette unité fixe la taille de la fenêtre du terminal Windows au démarrage du programme, empêche l'utilisateur de la redimensionner et empêche le défilement (scroll) dans le terminal.
-Sous Windows, elle fixe et verrouille la taille de la fenêtre. Sous Linux, elle demande seulement au terminal de se redimensionner.
+Cette unité fixe la taille de la fenêtre du terminal au démarrage. @br
+Sous Windows, elle fixe et verrouille la taille de la fenêtre. @br 
+Sous Linux, elle demande seulement au terminal de se redimensionner.
 }
 unit WindowsManager;
 
