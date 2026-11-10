@@ -69,14 +69,20 @@ end;
 {$ELSE}
 
 uses
-    crt;
+    crt, SysUtils;
 
 procedure lockConsoleWindow(width, height: LongInt);
 begin
-    { ask the terminal to resize itself to height rows and width columns (control sequence understood by most terminals) }
-    write(#27, '[8;', height, ';', width, 't');
-    { the terminal resizes asynchronously: wait a little before using the new size }
-    delay(200);
+    { crt only reads the size of the terminal when the program starts. If it is too small, ask the terminal to resize itself, then start the program again so that crt reads the new size. The argument --resized prevents starting again more than once }
+    if ((WindMaxX < width) or (WindMaxY < height)) and (ParamStr(1) <> '--resized') then
+    begin
+        { control sequence understood by most terminals: resize to height rows and width columns }
+        write(#27, '[8;', height, ';', width, 't');
+        { the terminal resizes asynchronously: wait a little before starting again }
+        delay(300);
+        Halt(ExecuteProcess(ParamStr(0), '--resized'));
+    end;
+
     { set window size }
     Window(1, 1, width, height);
     clrscr;
