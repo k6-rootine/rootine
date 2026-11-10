@@ -217,6 +217,16 @@ procedure displayQuitConfirmation();
 procedure pollQuitConfirmation(var answer: TQuitAnswer);
 
 {
+    @abstract(Affiche l'écran de déconnexion et attend une touche)
+}
+procedure displayLogout();
+
+{
+    @abstract(Affiche l'écran du fin du programme et attend une touche)
+}
+procedure displayQuit();
+
+{
     @abstract(Dessine le cadre autour de tour l'écran)
 }
 procedure renderOuterBorder();
@@ -263,23 +273,22 @@ const
     LIST_X = 30; { Colonne de gauche des listes, de la connexion et du profil }
     FORM_X = 15; { Colonne de gauche du formulaire d'inscription }
     DEFAULT_COLOR = crt.White; { Couleur défaut du programme }
+    SCREEN_MARGIN_X = 4; { Distance, en colonnes, entre les bords gauche et droit du terminal verrouillé et le cadre : tout le programme est dessiné à l'intérieur du cadre, le terminal fait donc BORDER_WIDTH + 2 * SCREEN_MARGIN_X colonnes }
+    SCREEN_MARGIN_Y = 2; { Distance, en lignes, entre les bords haut et bas du terminal verrouillé et le cadre : le terminal fait donc BORDER_HEIGHT + 2 * SCREEN_MARGIN_Y lignes }
 
 implementation
-
-const
-    RESET_MARGIN = 5; { Window() resetting margin }
 
 procedure enterArea(x1, y1, x2, y2: LongInt);
 begin
     { restricts the output to a rectangular area of the console (corners/borders are included) }
-    Window(x1, y1, x2, y2);
+    Window(x1 + SCREEN_MARGIN_X, y1 + SCREEN_MARGIN_Y, x2 + SCREEN_MARGIN_X, y2 + SCREEN_MARGIN_Y);
     GoToXY(1, 1);
 end;
 
 procedure leaveArea();
 begin
     { resets the output to the whole console }
-    Window(1, 1, BORDER_WIDTH + RESET_MARGIN, BORDER_HEIGHT + RESET_MARGIN);
+    Window(SCREEN_MARGIN_X + 1, SCREEN_MARGIN_Y + 1, BORDER_WIDTH + SCREEN_MARGIN_X + 1, BORDER_HEIGHT + SCREEN_MARGIN_Y + 1);
 end;
 
 function phaseLabel(phase: TPhaseSession): String;
@@ -367,6 +376,7 @@ procedure initialiseScreen();
 begin
     TextColor(DEFAULT_COLOR);
     clrscr;
+    leaveArea();
 end;
 
 procedure displayStartMenu(var choice: TStartChoice);
@@ -1018,6 +1028,26 @@ begin
         else if key = '2' then
             answer := QUIT_NO;
     end;
+end;
+
+procedure displayLogout();
+const 
+    MSG = 'Appuyez sur une touche pour continuer...';
+begin
+    renderScreenHeader('Vous avez ete deconnecte avec succes. A bientot !');
+    GoToXY((BORDER_WIDTH - length(MSG)) div 2, CONTENT_ROW + 1);
+    write(MSG);
+    readkey;
+end;
+
+procedure displayQuit();
+const 
+    MSG = 'Appuyez sur une touche pour quitter...';
+begin
+    renderScreenHeader('Le programme se termine. Merci d''avoir utilise Rootine !');
+    GoToXY((BORDER_WIDTH - length(MSG)) div 2, CONTENT_ROW + 1);
+    write(MSG);
+    readkey;
 end;
 
 end.

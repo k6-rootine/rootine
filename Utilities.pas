@@ -25,7 +25,8 @@ const
     ALLOWED_FULLNAME_CHARS = ['a'..'z', 'A'..'Z', ' ', '-', ''''];
     BORDER_WIDTH = 121;
     BORDER_HEIGHT = 35;
-    RESET_MARGIN = 5; 
+    SCREEN_MARGIN_X = 4;
+    SCREEN_MARGIN_Y = 2;
     NUMBERS : Array[0..9, 1..7] of String = (
         ('######', '##  ##', '##  ##', '##  ##', '##  ##', '##  ##', '######'),   { 0 }
         ('####  ', '  ##  ', '  ##  ', '  ##  ', '  ##  ', '  ##  ', '######'),   { 1 }
@@ -43,7 +44,7 @@ const
 procedure RootineLogo(X, Y: LongInt);
 begin 
     {restrict the logo to a specific area of the console}
-    Window(X, Y, BORDER_WIDTH - 1, Y + 10);
+    Window(X + SCREEN_MARGIN_X, Y + SCREEN_MARGIN_Y, BORDER_WIDTH - 1 + SCREEN_MARGIN_X, Y + 10 + SCREEN_MARGIN_Y);
     writeln('########                         ##     ##');
     writeln('##     ##                        ##     ##');
     writeln('##     ##                        ##');
@@ -55,7 +56,7 @@ begin
     writeln('##      ##  ######    ######      ####  ##  ##     ##  ######');
 
     {reset the window to the full console size}
-    Window(1, 1, BORDER_WIDTH + RESET_MARGIN, BORDER_HEIGHT + RESET_MARGIN);
+    Window(SCREEN_MARGIN_X + 1, SCREEN_MARGIN_Y + 1, BORDER_WIDTH + SCREEN_MARGIN_X + 1, BORDER_HEIGHT + SCREEN_MARGIN_Y + 1);
 end;
 
 procedure displayClockNumber(number: LongInt);
