@@ -41,8 +41,24 @@ begin
 end;
 
 procedure handleViewForest(user: TUser);
-begin 
+var
+    forest: TForest;
+    tree: TTree;
+    idx: LongInt;
+    timedOut: Boolean;
+begin
+    forest := getForest(user);
 
+    repeat
+        displayForestOverview(forest, idx); { idx = 0 means return, or an empty forest }
+
+        if idx > 0 then
+            if treeExists(getForestSpeciesName(forest, idx)) then
+            begin
+                tree := loadTree(getForestSpeciesName(forest, idx));
+                displayTreeFull(tree, 0, timedOut);
+            end;
+    until idx = 0;
 end;
 
 procedure handleLogout(user: TUser);
