@@ -52,7 +52,7 @@ procedure writeWrapped(text: String; width: LongInt);
 
 {
     @abstract(Attend une touche, avec une limite de temps éventuelle)
-    @param deadline La fin de l'attente, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param deadline La fin de l'attente, en millisecondes, ou 0 s'il n'y a pas de limite de temps
     @param countdownRow La ligne de la fenêtre courante où le temps restant est affiché
     @param key La touche pressée
     @returns(Vrai si une touche a été pressée. Faux si le temps est écoulé)
@@ -64,7 +64,7 @@ function waitKeyUntil(deadline: Int64; countdownRow: LongInt; var key: Char): Bo
     @param prompt Le message affiché devant la saisie
     @param minValue La plus petite valeur acceptée
     @param maxValue La plus grande valeur acceptée
-    @param deadline La fin de la saisie, en ms, ou 0 s'il n'y a pas de limite de temps
+    @param deadline La fin de la saisie, en millisecondes, ou 0 s'il n'y a pas de limite de temps
     @param countdownRow La ligne de la fenêtre courante où le temps restant est affiché
     @param timedOut Vrai si la saise s'est arrêtée parce que le temps est écoulé
     @returns(Le nombre saisi. Si le temps est écoule, la valeur renvoyée n'est pas significative)
@@ -98,11 +98,18 @@ procedure enterArea(x1, y1, x2, y2: LongInt);
 procedure leaveArea();
 
 {
-    @abstract(Donne l'instant actuel en ms)
+    @abstract(Donne l'instant actuel en millisecondes)
     Le nombre est celui de GetTickCount64. Il ne sert qu'à mesurer des durées en faisant la différence de deux appels.
-    @returns(Le nombre de ms écoulées depuis le démarrage de Windows)
+    @returns(Le nombre de millisecondes écoulées depuis le démarrage de Windows)
 }
 function currentTick(): Int64;
+
+{
+    @abstract(Calcule l'instant d'une échéance située dans un certain nombre de secondes)
+    @param seconds Le nombre de secondes avant l'échéance
+    @returns(L'instant de l'échéance, en millisecondes)
+}
+function deadlineIn(seconds: LongInt): Int64;
 
 const
     KEY_SPECIAL = #0; //> Premier code d'une touche spéciale (flèches, F1...), suivi d'un second code 
@@ -226,6 +233,11 @@ begin
         computeGrowthPhase := 1
     else
         computeGrowthPhase := 1 + (elapsed * nbPhases) div duration;
+end;
+
+function deadlineIn(seconds: LongInt): Int64;
+begin
+    deadlineIn := currentTick() + Int64(seconds) * 1000;
 end;
 
 function secondsLeft(deadline: Int64): LongInt;
