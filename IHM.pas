@@ -593,7 +593,10 @@ begin
 
         for i := 1 to nbSpecies do
         begin
-            GoToXY(1 + ((i - 1) div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + ((i - 1) mod ROWS_PER_COLUMN)); { formula to calculate position to print items in this layout }
+            { formula to calculate position to print items in this layout }
+            GoToXY(1 + ((i - 1) div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + ((i - 1) mod ROWS_PER_COLUMN)); 
+
+            { %-6s: pads the number into 6 characters }
             write(format('%-6s%s (x%d)', ['[' + inttostr(i) + ']', getForestSpeciesName(forest, i), getNbTreesGrown(forest, i)]));
         end;
         GoToXY(1, ROWS_PER_COLUMN + 2);
@@ -771,7 +774,7 @@ begin
     for i := 0 to nbSpecies - 1 do
     begin
         GoToXY(1 + (i div ROWS_PER_COLUMN) * COLUMN_WIDTH, 1 + (i mod ROWS_PER_COLUMN));
-        {the number is padded to 6 characters so that the names stay aligned from [10] on}
+        { %-6s: pads the number into 6 characters }
         write(format('%-6s%s', ['[' + inttostr(i + 1) + ']', species[i]]));
     end;
     GoToXY(1, ROWS_PER_COLUMN + 2);
