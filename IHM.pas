@@ -491,11 +491,11 @@ begin
 
     enterArea(FORM_X, CONTENT_ROW, FORM_X + 90, BORDER_HEIGHT - 2);
 
-    { display instructions }
+    { display instructions; 91 is the width of the window, so the lines are cut between words }
     writeln('Attention ! ');
-    writeln('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.');
-    writeln('- Le nom d''utilisateur doit etre unique et entre 1 et 30 caracteres.');
-    writeln('- Les caracteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.');
+    writeWrapped('- Les espaces et les caracteres speciaux ne sont pas autorises dans le nom d''utilisateur.', 91);
+    writeWrapped('- Le nom d''utilisateur doit etre unique et entre 1 et 30 caracteres.', 91);
+    writeWrapped('- Les caracteres speciaux, sauf le tiret et l''apostrophe, ne sont pas autorises dans le prenom.', 91);
 
     { enter username. if already exists or invalid, ask again. an empty username cancels. }
     repeat
