@@ -260,8 +260,6 @@ procedure renderStatsArea(phase: TPhaseSession; session: LongInt; speciesName: S
 
 const
     BORDER_CHAR = '*'; { Caractère avec lequel le cadre est tracé }
-    BORDER_WIDTH = 121; { Nombre de colonnes de l'écran, cadre compris }
-    BORDER_HEIGHT = 35; { Nombre de lignes de l'écran, cadre compris }
     BORDER_TREE_VERTICAL = 80; { Colonne de la ligne qui sépare l'arbre (à gauche) du panneau à droite }
     BORDER_CLOCK_HORIZONTAL = 13; { Ligne qui sépare l'horloge des informations de la session }
     BORDER_STATS_HORIZONTAL = 20; { Ligne qui sépare les informations de la session des instructions }
@@ -273,23 +271,8 @@ const
     LIST_X = 30; { Colonne de gauche des listes, de la connexion et du profil }
     FORM_X = 15; { Colonne de gauche du formulaire d'inscription }
     DEFAULT_COLOR = crt.White; { Couleur défaut du programme }
-    SCREEN_MARGIN_X = 4; { Distance, en colonnes, entre les bords gauche et droit du terminal verrouillé et le cadre : tout le programme est dessiné à l'intérieur du cadre, le terminal fait donc BORDER_WIDTH + 2 * SCREEN_MARGIN_X colonnes }
-    SCREEN_MARGIN_Y = 2; { Distance, en lignes, entre les bords haut et bas du terminal verrouillé et le cadre : le terminal fait donc BORDER_HEIGHT + 2 * SCREEN_MARGIN_Y lignes }
 
 implementation
-
-procedure enterArea(x1, y1, x2, y2: LongInt);
-begin
-    { restricts the output to a rectangular area of the console (corners/borders are included) }
-    Window(x1 + SCREEN_MARGIN_X, y1 + SCREEN_MARGIN_Y, x2 + SCREEN_MARGIN_X, y2 + SCREEN_MARGIN_Y);
-    GoToXY(1, 1);
-end;
-
-procedure leaveArea();
-begin
-    { resets the output to the whole console }
-    Window(SCREEN_MARGIN_X + 1, SCREEN_MARGIN_Y + 1, BORDER_WIDTH + SCREEN_MARGIN_X + 1, BORDER_HEIGHT + SCREEN_MARGIN_Y + 1);
-end;
 
 function phaseLabel(phase: TPhaseSession): String;
 begin
