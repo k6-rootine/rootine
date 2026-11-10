@@ -1,6 +1,6 @@
 {
 Cette unité fixe la taille de la fenêtre du terminal Windows au démarrage du programme, empêche l'utilisateur de la redimensionner et empêche le défilement (scroll) dans le terminal.
-Elle ne fonctionne que sous Windows. Sous un autre système, elle ne fait rien.
+Sous Windows, elle fixe et verrouille la taille de la fenêtre. Sous Linux, elle demande seulement au terminal de se redimensionner.
 }
 unit WindowsManager;
 
@@ -68,9 +68,18 @@ end;
 
 {$ELSE}
 
+uses
+    crt;
+
 procedure lockConsoleWindow(width, height: LongInt);
 begin
-    { nothing to do since this functionality is only available on Windows }
+    { ask the terminal to resize itself to height rows and width columns (control sequence understood by most terminals) }
+    write(#27, '[8;', height, ';', width, 't');
+    { the terminal resizes asynchronously: wait a little before using the new size }
+    delay(200);
+    { set window size }
+    Window(1, 1, width, height);
+    clrscr;
 end;
 
 {$ENDIF}
