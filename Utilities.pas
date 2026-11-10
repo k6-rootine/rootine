@@ -36,6 +36,7 @@ function isValidName(fullname: String): Boolean;
 
 {
     @abstract(Calcule la phase de croissance d'un arbre selon te temps écoulé)
+    Les phases 1 à nbPhases - 1 se succèdent à intervalles réguliers (croissance linéaire) pendant la session, sauf pendant ses 5 dernières secondes. La dernière phase (nbPhases) n'est affichée que pendant ces 5 dernières secondes, jusqu'à la fin de la session.
     @param nbPhases Le nombre de phases de l'arbre
     @param elapsed Le temps écoulé de la session, en secondes
     @param duration La durée totale de la session, en secondes
@@ -224,15 +225,21 @@ begin
 end;
 
 function computeGrowthPhase(nbPhases, elapsed, duration: LongInt): LongInt;
+const 
+    LAST_PHASE_SECONDS = 5;
 begin 
     if nbPhases <= 0 then
         computeGrowthPhase := 0
-    else if (duration <= 0) or (elapsed >= duration) then
+    else if (nbPhases = 1) or (duration <= 0) or (elapsed >= duration) then
         computeGrowthPhase := nbPhases
     else if elapsed <= 0 then
         computeGrowthPhase := 1
+    else if duration - elapsed <= LAST_PHASE_SECONDS then
+        { the last phase is only shown during the last seconds of the session }
+        computeGrowthPhase := nbPhases
     else
-        computeGrowthPhase := 1 + (elapsed * nbPhases) div duration;
+        { the phases 1 to nbPhases - 1 grow linearly during the time before the last seconds }
+        computeGrowthPhase := 1 + (elapsed * (nbPhases - 1)) div (duration - LAST_PHASE_SECONDS);
 end;
 
 function deadlineIn(seconds: LongInt): Int64;
