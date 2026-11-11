@@ -8,13 +8,13 @@ interface
         {Le type de cycle.
             CUSTOM : les durées sont choisies par l'utilisateur.
             POMODORO : le cycle Pomodoro classique. L'unité ne définit pas elle-même de valeurs par défaut, l'appelant doit les passer à initialiseCycle. }
-        TMode = (CUSTOM, POMODORO, NONE_MODE);
+        TMode = (CUSTOM, POMODORO);
 
         {La phase de la session dans laquelle se trouve actuellement l'utilisateur. (Avec LONG_BREAK toutes les N sessions de concentration)}
-        TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK, NONE_PHASESESSION);
+        TPhaseSession = (FOCUS, SHORT_BREAK, LONG_BREAK);
 
         {L'état du cycle dans lequel se trouve actuellement l'utilisateur.}
-        TState = (NOT_STARTED, IN_PROGRESS, FINISHED, ABANDONED, NONE_STATE);
+        TState = (NOT_STARTED, IN_PROGRESS, FINISHED);
 
         {Description complète d'un cycle.}
         TCycle = Record
@@ -27,23 +27,33 @@ interface
 
     {Crée un nouveau cycle, prêt à être démarré.
     Le cycle commence à l'état NOT_STARTED, à la session 0 et à la phase FOCUS.
+    @param mode                       Le mode du cycle (CUSTOM ou POMODORO).
+    @param focusDuration              Durée d'une phase de concentration (doit être > 0 pour pouvoir démarrer le cycle).
+    @param shortBreakDuration         Durée d'une pause courte.
+    @param longBreakDuration          Durée d'une pause longue.
+    @param nbSessionsBeforeLongBreak  Nombre de sessions de concentration avant chaque pause longue (0 = pas de pause longue).
     @returns le cycle initialisé.}
     function initialiseCycle(mode: TMode; focusDuration, shortBreakDuration, longBreakDuration,
             nbSessionsBeforeLongBreak: LongInt): TCycle;
     
-    { @returns le mode (CUSTOM ou POMODORO) du cycle. }
+    { @param cycle  Le cycle à consulter.
+    @returns le mode (CUSTOM ou POMODORO) du cycle. }
     function getMode(cycle: Tcycle): TMode;
 
-    { @returns Le numéro de la session de concentration en cours (0 si le cycle n'est pas démarré). }
+    { @param cycle  Le cycle à consulter.
+    @returns Le numéro de la session de concentration en cours (0 si le cycle n'est pas démarré). }
     function getCurrentSession(cycle: TCycle): LongInt;
 
-    { @returns La phase en cours (FOCUS, SHORT_BREAK ou LONG_BREAK). }
+    { @param cycle  Le cycle à consulter.
+    @returns La phase en cours (FOCUS, SHORT_BREAK ou LONG_BREAK). }
     function getCurrentPhase(cycle: Tcycle): TPhaseSession;
 
-    { @returns La durée de la phase en cours, tirée du paramètre correspondant (concentration, pause courte ou pause longue). }
+    { @param cycle  Le cycle à consulter.
+    @returns La durée de la phase en cours, tirée du paramètre correspondant (concentration, pause courte ou pause longue). }
     function getCurrentPhaseDuration(cycle: Tcycle): LongInt;
 
-    { @returns L'état global du cycle (NOT_STARTED, IN_PROGRESS, FINISHED ou ABANDONED). }
+    { @param cycle  Le cycle à consulter.
+    @returns L'état global du cycle (NOT_STARTED, IN_PROGRESS ou FINISHED). }
     function getState(cycle: Tcycle): TState;
 
     { Démarre le cycle : passe à la session 1, à la phase FOCUS et à l'état IN_PROGRESS.
@@ -61,11 +71,16 @@ interface
     @param cycle Le cycle à terminer (modifié). }
     procedure finishCycle(var cycle: TCycle);
 
-    { Marque le cycle comme ABANDONED. Ne fait rien si l'état n'est pas IN_PROGRESS.
-    @param cycle Le cycle à abandonner (modifié). }
-    procedure abandonCycle(var cycle: TCycle);
+    { Abandonne le cycle : retour à NOT_STARTED, session 0, phase FOCUS.
+    Les paramètres (mode et durées) sont conservés, le cycle peut donc être redémarré.
+    @param cycle Le cycle à réinitialiser (modifié). }
+    procedure abandonCycle(var cycle: Tcycle);
 
-implementation
+
+
+
+
+implementation 
 
     function initialiseCycle(mode: TMode; focusDuration, shortBreakDuration, longBreakDuration, nbSessionsBeforeLongBreak: LongInt): TCycle;
     var cycle: Tcycle;
@@ -104,10 +119,8 @@ implementation
             getCurrentPhaseDuration := cycle.focusDuration
         else if getCurrentPhase(cycle) = SHORT_BREAK then
             getCurrentPhaseDuration := cycle.shortBreakDuration
-        else if getCurrentPhase(cycle) = LONG_BREAK then
-            getCurrentPhaseDuration := cycle.longBreakDuration
-        else
-            getCurrentPhaseDuration := 0;
+        else 
+            getCurrentPhaseDuration := cycle.longBreakDuration;
     end;
 
     function getState(cycle: Tcycle): TState;
@@ -151,14 +164,16 @@ implementation
 
     procedure finishCycle(var cycle: TCycle);
     begin
-        if cycle.state = IN_PROGRESS then
+    if cycle.state = IN_PROGRESS then
             cycle.state := FINISHED;
     end;
 
-    procedure abandonCycle(var cycle: TCycle);
+    procedure abandonCycle(var cycle: Tcycle);
     begin
-        if cycle.state = IN_PROGRESS then
-            cycle.state := ABANDONED;
+        {abandon : retour à l'état initial, les paramètres sont conservés }
+        cycle.currentSession := 0;
+        cycle.currentPhase := FOCUS;
+        cycle.state := NOT_STARTED;
     end;
 
-end.
+    end.
