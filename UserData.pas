@@ -36,16 +36,23 @@ interface
     {--- DATE ---}
 
     { Construit une date à partir de ses trois parties.
+    Aucune vérification de validité (par exemple mois entre 1 et 12) n'est faite.
+    @param day    Le jour du mois (1..31).
+    @param month  Le mois (1..12).
+    @param year   L'année (par exemple 2026).
     @returns le TDate correspondant. }
     function initialiseDate(day, month, year: LongInt): TDate;
     
-    { @returns Le jour du mois de la date. }
+    { @param date  La date à consulter.
+    @returns Le jour du mois de la date. }
     function getDay(date: TDate): LongInt;
 
-    { @returns Le mois de la date. }
+    { @param date  La date à consulter.
+    @returns Le mois de la date. }
     function getMonth(date: TDate): LongInt;
 
-    { @returns L'année de la date. }
+    { @param date  La date à consulter.
+    @returns L'année de la date. }
     function getYear(date: TDate): LongInt;
 
 
@@ -61,7 +68,8 @@ interface
         @returns Le nombre d'arbres de l'espèce n, ou 0 si n est hors limites.}
     function getNbTreesGrown(forest: TForest; n: LongInt): LongInt;
 
-    { @returns Le nombre d'espèces différentes dans la forêt. }
+    { @param forest  La forêt à consulter.
+    @returns Le nombre d'espèces différentes dans la forêt. }
     function getNbSpecies(forest: TForest): LongInt;
     
     {  Recherche une espèce par son nom (sensible à la casse, correspondance exacte).
@@ -84,7 +92,8 @@ interface
         @returns Un nouvel utilisateur. }
     function initialiseUser(): TUser;
 
-    { @returns Le nom affiché de l'utilisateur. }
+    { @param user  L'utilisateur à consulter.
+    @returns Le nom affiché de l'utilisateur. }
     function getName(user: TUser): string;
 
     { Définit le nom affiché de l'utilisateur.
@@ -97,7 +106,8 @@ interface
         @param username  Le nouveau nom d'utilisateur. }
     procedure setUsername(var user: TUser; username: string);
 
-    { @returns Le nom d'utilisateur (identifiant de connexion) de l'utilisateur. }
+    { @param user  L'utilisateur à consulter.
+    @returns Le nom d'utilisateur (identifiant de connexion) de l'utilisateur. }
     function getUsername(user: TUser): string;
 
     { Définit la description.
@@ -105,7 +115,8 @@ interface
         @param description  La nouvelle description. }
     procedure setUserDescription(var user: TUser; description: string);
 
-    { @returns La description (biographie) de l'utilisateur. }
+    { @param user  L'utilisateur à consulter.
+    @returns La description (biographie) de l'utilisateur. }
     function getUserDescription(user: TUser): string;
 
     { Définit le nombre de sessions terminées.
@@ -113,7 +124,8 @@ interface
         @param nb    Le nouveau total (devrait être >= 0, non vérifié). }
     procedure setNbSessionsDone(var user: TUser; nb: LongInt);
 
-    { @returns Le nombre total de sessions de concentration terminées par l'utilisateur. }
+    { @param user  L'utilisateur à consulter.
+    @returns Le nombre total de sessions de concentration terminées par l'utilisateur. }
     function getNbSessionsDone(user: TUser): LongInt;
 
     { Définit le nombre de cycles terminés.
@@ -121,7 +133,8 @@ interface
         @param nb    Le nouveau total (devrait être >= 0, non vérifié). }
     procedure setNbCyclesDone(var user: TUser; nb: LongInt);
 
-    { @returns Le nombre total de cycles terminés par l'utilisateur. }
+    { @param user  L'utilisateur à consulter.
+    @returns Le nombre total de cycles terminés par l'utilisateur. }
     function getNbCyclesDone(user: TUser): LongInt;
 
     { Définit le temps de concentration total.
@@ -129,13 +142,16 @@ interface
         @param nb    Le nouveau total, dans la même unité que les durées des cycles (devrait être >= 0, non vérifié). }
     procedure setTotalFocusTime(var user: TUser; nb: LongInt);
 
-    { @returns Le temps de concentration total, dans l'unité utilisée pour les durées des cycles. }
+    { @param user  L'utilisateur à consulter.
+    @returns Le temps de concentration total, dans l'unité utilisée pour les durées des cycles. }
     function getTotalFocusTime(user: TUser): LongInt;
 
-    { @returns Une copie de la forêt de l'utilisateur. Modifier la copie ne change pas l'utilisateur ; utiliser addTree pour cultiver des arbres. }
+    { @param user  L'utilisateur dont on veut la forêt.
+    @returns Une copie de la forêt de l'utilisateur. Modifier la copie ne change pas l'utilisateur ; utiliser addTree pour cultiver des arbres. }
     function getForest(user: TUser): TForest;
 
-    { @returns La date de création du compte.}
+    { @param user  L'utilisateur à consulter.
+    @returns La date de création du compte.}
     function getJoinDate(user: TUser): TDate;
 
     {Ajoute un arbre cultivé de l'espèce donnée à la forêt de l'utilisateur.
